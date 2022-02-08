@@ -11,14 +11,14 @@ source("GitModelSelection.R")
 
 # load BRCA data 
 load("BRCA/BRCA21.RData")
-
+V = t(V) # rows should be patients and columns mutation types
 ##--------------------------------------------------------
 ## Factors
 ##--------------------------------------------------------
 ## The factors for 96 different mutation types 
-L = factor(substr(rownames(V), start = 1, stop = 1))
-M = factor(substr(rownames(V), start = 3, stop = 5))
-R = factor(substr(rownames(V), start = 7, stop = 7))
+L = factor(substr(colnames(V), start = 1, stop = 1))
+M = factor(substr(colnames(V), start = 3, stop = 5))
+R = factor(substr(colnames(V), start = 7, stop = 7))
 
 ##--------------------------------------------------------
 ## Parametrizations of a signature
@@ -53,8 +53,8 @@ resFactors = list()
 ## On a normal latop this takes around 5 minutes. 
 ## The GKL is summarized in resMat. 
 ## We provide resMat for our run in file "GitUCUT26results.txt"
-high.tolerance <- 1
-low.tolerance <- 0.2
+high.tolerance <- 0.5
+low.tolerance <- 0.1
 for (m in 1:nModels){
   nprm1 <- ncol( MList[[m]][[1]] )
   nprm2 <- ncol( MList[[m]][[2]] )
@@ -92,3 +92,6 @@ for (m in 1:nModels){
 resMat <- resMat[sort(resMat[,"nprmtot"],index=TRUE)$ix,]
 print(resMat)
 #save(resFactors, file = "BRCAmodelFactors.RData")
+
+BIC = 2*resMat[,"GKL"] + log(21*96)*resMat[,"nprmtot"]
+plot(BIC)

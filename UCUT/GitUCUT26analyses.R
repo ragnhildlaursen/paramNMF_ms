@@ -6,20 +6,20 @@ source("GitModelSelection.R")
 ## Load UCUT data
 load("UCUT_5_all.RData")
 
-V5 = Vall   # data (No. Mutation types) x (No. patients)
+V5 = t(Vall)   # data (No. patients) x (No. Mutation types)
 ## UCUT has 1536 mutation types and 26 patients 
 V5[V5 == 0] = .Machine$double.eps # Zero entries replaced with small epsilon to avoid division by zero in EM-algorithm
 ##--------------------------------------------------------
 ## Factors
 ##--------------------------------------------------------
 ## First and second left flanking nucleotide 
-l1 = factor(substr(rownames(V5), start = 1, stop = 1))
-l2 = factor(substr(rownames(V5), start = 9, stop = 9))
+l1 = factor(substr(colnames(V5), start = 1, stop = 1))
+l2 = factor(substr(colnames(V5), start = 9, stop = 9))
 ## Actual point mutation
-m = factor(substr(rownames(V5), start = 3,stop = 5))
+m = factor(substr(colnames(V5), start = 3,stop = 5))
 ## First and second right flanking nucleotide 
-r1 = factor(substr(rownames(V5), start = 7, stop = 7))
-r2 = factor(substr(rownames(V5), start = 11, stop = 11))
+r1 = factor(substr(colnames(V5), start = 7, stop = 7))
+r2 = factor(substr(colnames(V5), start = 11, stop = 11))
 
 ##--------------------------------------------------------
 ## Parametrizations of a signature
@@ -79,7 +79,7 @@ for (i in 1:nModels){
   cat("\n")
   jmin <- which.min(tmp)
   resMat[i,4] <- jmin
-  res <- NMFglmSQR(Data=V5,NoSignatures=2,DesignMatrix=MList[[i]],tolerance=low.tolerance,Seeds=jmin)$gkl
+  res <- NMFglmSQR(Data=V5,DesignMatrix=MList[[i]],tolerance=low.tolerance,Seeds=jmin)$gkl
   ## 
   resMat[i,5] <- res
   cat("Final result:","nprm1:",nprm1,"; nprm2:",nprm2,
