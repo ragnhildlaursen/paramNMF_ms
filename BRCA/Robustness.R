@@ -1,3 +1,4 @@
+rm(list=ls())
 ################################################
 ## Checking robustness of mutational signatures 
 ################################################
@@ -5,14 +6,14 @@ source("GitModelSelection.R")
 
 # load BRCA data 
 load("BRCA/BRCA21.RData")
-
+V = t(V) # change to dimension patients x mutation types
 ##--------------------------------------------------------
 ## Factors
 ##--------------------------------------------------------
 ## The factors for 96 different mutation types 
-L = factor(substr(rownames(V), start = 1, stop = 1))
-M = factor(substr(rownames(V), start = 3, stop = 5))
-R = factor(substr(rownames(V), start = 7, stop = 7))
+L = factor(substr(colnames(V), start = 1, stop = 1))
+M = factor(substr(colnames(V), start = 3, stop = 5))
+R = factor(substr(colnames(V), start = 7, stop = 7))
 
 ##--------------------------------------------------------
 ## Parametrizations of a signature
@@ -22,34 +23,96 @@ Mfull = model.matrix(~0+L*M*R)      # full model
 Mdi = model.matrix(~0+L*M + M*R)    # di-nucleotide model
 Mmono = model.matrix(~0+L + M + R)  # multiplicative model
 
+load("BRCAmodelFactors.RData")
+TriRes = resFactors[[15]]
+DiRes = resFactors[[11]]
+MixRes = resFactors[[9]]
+MonoRes = resFactors[[1]]
 ##-----------------------------------------------------------------------
 ## Sample a number of mutations from each patient (downsampling)
 ##-----------------------------------------------------------------------
 sampleV <- V
-nMtTps <- dim(V)[1] # Number of mutation types
-nG <- dim(V)[2]     # Number of patients (genomes)
-nMt <- colSums(V)
-dwn <- 50  # Down sampling 100, 50, 20, 10
-nSim <- 100  # 5 if small study. 100 if intermediate. 200 if large.
+nG <- dim(V)[1]     # Number of patients (genomes)
+nMtTps <- dim(V)[2] # Number of mutation types
+nMt <- rowSums(V)
+dwn <- 20  # Down sampling 100, 50, 20, 10
+nSim <- 10  # 5 if small study. 100 if intermediate. 200 if large.
 ResCosineMatTri <- matrix(0,nrow=nG,ncol=nSim) 
 ResCosineMatMix <- matrix(0,nrow=nG,ncol=nSim) 
+ResCosineMatDi <- matrix(0,nrow=nG,ncol=nSim) 
+ResCosineMatMono <- matrix(0,nrow=nG,ncol=nSim)
 for (nsim in 1:nSim){
   cat(nsim,"out of",nSim,"\n")
-  nSimMt <- round(colSums(V)/dwn)
+  nSimMt <- round(rowSums(V)/dwn)
   for (i in 1:nG){
     set.seed(NULL)
-    sim <- sample( x=1:nMtTps , size=nSimMt[i], replace=TRUE, prob=V[,i])
-    sampleV[,i] <- tabulate(sim,nbins=nMtTps)
+    sim <- sample( x=1:nMtTps , size=nSimMt[i], replace=TRUE, prob=V[i,])
+    sampleV[i,] <- tabulate(sim,nbins=nMtTps)
   }
-  ResultFixTri <- NMFglmSQRfixedSignature(sampleV,TriSignatures,tol=0.2,Seeds=1)
-  ResultFixMix <- NMFglmSQRfixedSignature(sampleV,MixSignatures,tol=0.2,Seeds=1)
+  ResultFixTri <- NMFglmSQR(Data = sampleV, NoSignatures = 4, Signatures = TriRes$Signatures,tol=0.2,Seeds=sample(1:100,3))
+  ResultFixMix <- NMFglmSQR(Data = sampleV, NoSignatures = 4, Signatures = MixRes$Signatures,tol=0.2,Seeds=sample(1:100,3))
+  ResultFixDi <- NMFglmSQR(Data = sampleV, NoSignatures = 4, Signatures = DiRes$Signatures,tol=0.2,Seeds=sample(1:100,3))
+  ResultFixMono <- NMFglmSQR(Data = sampleV, NoSignatures = 4, Signatures = MonoRes$Signatures,tol=0.2,Seeds=sample(1:100,3))
   ## Compare exposures: Cosine similarity for each patient
   for (i in 1:nG){
-    a <- TriExposures[,i]
-    b <- ResultFixTri$Exposures[,i]
+    a <- TriRes$Exposures[i,]
+    b <- ResultFixTri$Exposures[i,]
     ResCosineMatTri[i,nsim] <- sum(a*b)/sqrt(sum(a^2)*sum(b^2))
-    a <- MixExposures[,i]
-    b <- ResultFixMix$Exposures[,i]
+    
+    a <- MixRes$Exposures[i,]
+    b <- ResultFixMix$Exposures[i,]
     ResCosineMatMix[i,nsim] <- sum(a*b)/sqrt(sum(a^2)*sum(b^2))
+    
+    a <- DiRes$Exposures[i,]
+    b <- ResultFixDi$Exposures[i,]
+    ResCosineMatDi[i,nsim] <- sum(a*b)/sqrt(sum(a^2)*sum(b^2))
+    
+    a <- MonoRes$Exposures[i,]
+    b <- ResultFixMono$Exposures[i,]
+    ResCosineMatMono[i,nsim] <- sum(a*b)/sqrt(sum(a^2)*sum(b^2))
   }
 }
+
+##------------------------------------------------------------------
+## Compare true exposures and estimated exposures
+##------------------------------------------------------------------
+## Mean
+mnTri <- rowMeans(ResCosineMatTri)
+mnMix <- rowMeans(ResCosineMatMix)
+mnDi <- rowMeans(ResCosineMatDi)
+mnMono <- rowMeans(ResCosineMatMono)
+# plot mean
+plot(mnTri,ylim=c(0,1),col="red",pch=19,cex=1)
+points(mnMix,col="blue",pch=19,cex=0.8)
+points(mnDi,col="green",pch=19,cex=0.6)
+points(mnMono,col="orange",pch=19,cex=0.4)
+## Var
+vrTri <- apply(ResCosineMatTri,1,var)
+
+vrMix <- apply(ResCosineMatMix,1,var)
+plot(vrTri,col="red",pch=19,cex=0.8)
+points(vrMix,col="blue",pch=19,cex=0.6)
+## Quantiles
+qTri <- apply(ResCosineMatTri,1,quantile,probs=c(0.05,0.95))
+qMix <- apply(ResCosineMatMix,1,quantile,probs=c(0.05,0.95))
+## Mean with quantiles
+
+plot(1:21,mnTri,ylim=c(0,1),col="red",pch=19,cex=0.9,
+     main=paste("Ratio of down sampling:",dwn),
+     xlab="Patient",ylab="Cosine Similarity",cex.lab=1.2)
+axis(side=1, at=0:21, labels = TRUE)
+points(1:21+0.3,mnMix,col="blue",pch=19,cex=0.9)
+for (i in 1:21){
+  points(rep(i,2),qTri[,i],col="red",type="l",lwd=2)
+  points(rep(i+0.3,2),qMix[,i],col="blue",type="l",lwd=2)
+}
+lines(c(14,15),rep(0.5,2),col="red",lwd=2)
+text(15,0.5,"Sole tri-nucleotide",pos=4,cex=1.2)
+lines(c(14,15),rep(0.4,2),col="blue",lwd=2)
+text(15,0.4,"Mixture",pos=4,lwd=2,cex=1.2)
+points(14.5,0.3,pch=19,col="black",cex=1.2)
+text(15,0.3,"Mean",pos=4,cex=1.2)
+lines(c(14,15),rep(0.2,2),lty=1,lwd=2)
+text(15,0.2,"Quantile interval",pos=4,cex=1.2)
+text(1:21,rep(0.05,15),nSimMt,cex=0.8)
+text(0.5,0.12,"Number of sampled mutations",pos=4,cex=1.2)

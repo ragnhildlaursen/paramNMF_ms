@@ -54,7 +54,8 @@ resFactors = list()
 ## The GKL is summarized in resMat. 
 ## We provide resMat for our run in file "GitUCUT26results.txt"
 high.tolerance <- 0.5
-low.tolerance <- 0.1
+low.tolerance <- 0.01
+repshigh = 50
 for (m in 1:nModels){
   nprm1 <- ncol( MList[[m]][[1]] )
   nprm2 <- ncol( MList[[m]][[2]] )
@@ -67,13 +68,14 @@ for (m in 1:nModels){
   resMat[m,5] <- nprm1+nprm2+nprm3+nprm4
   ## List of models chosen
   ## Run the EM algorithm many times with a high tolerance to identify global minimum
-  tmp <- rep(0,30)
+  tmp <- rep(0,repshigh)
+  seed = sample(1:10000,repshigh)
   cat("Model:",m,"","\n")
   cat("EM Run: ")
   for (j in 1:length(tmp)){
     cat(j,"")
     tmp[j] = NMFglmSQR(Data=V, NoSignatures=4,DesignMatrix = MList[[m]], 
-                       tolerance =high.tolerance, Seeds = j)$gkl
+                       tolerance =high.tolerance, Seeds = seed[j])$gkl
   }
   ## Choose the best initial value and run again until convergence, i.e.
   ## stop when the tolerance is small
@@ -81,17 +83,21 @@ for (m in 1:nModels){
   jmin <- which.min(tmp)
   resMat[m,6] <- jmin
   res <- NMFglmSQR(Data=V,NoSignatures=4,DesignMatrix=MList[[m]],
-                   tolerance=low.tolerance,Seeds=jmin)
+                   tolerance=low.tolerance,Seeds=seed[jmin])
   resFactors[[m]] = res
   
   ## print results
   resMat[m,7] <- res$gkl
   cat("Final result:","nprm:",nprm1,nprm2,nprm3,nprm4,
-      "; seed:",jmin,", GKL:",res$gkl,"\n" )
+      "; seed:",seed[jmin],", GKL:",res$gkl,"\n" )
 }
-resMat <- resMat[sort(resMat[,"nprmtot"],index=TRUE)$ix,]
+#resMat <- resMat[sort(resMat[,"nprmtot"],index=TRUE)$ix,]
 print(resMat)
-#save(resFactors, file = "BRCAmodelFactors.RData")
 
 BIC = 2*resMat[,"GKL"] + log(21*96)*resMat[,"nprmtot"]
 plot(BIC)
+which.min(BIC)
+plot(resMat[,"GKL"])
+
+#save(resFactors, file = "BRCAmodelFactors.RData")
+#save(resMat, file = "BRCAmodelRes.RData")

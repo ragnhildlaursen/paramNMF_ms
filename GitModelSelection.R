@@ -74,7 +74,7 @@ glm.update = function(y,X, maxiter = 25, epsilon = 1e-8){
 #' @export
 #'
 NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix), 
-                     DesignMatrix = rep(list(diag(nrow(Data))),NoSignatures), 
+                     DesignMatrix = rep(list(diag(ncol(Data))),NoSignatures), 
                      tolerance = 1e-2, maxIter = 5000, Seeds = c(1,2,3), Exposures = NULL, Signatures = NULL){
   
   if(!is.list(DesignMatrix)) stop("DesignMatrix needs to be a list of matrices.")
@@ -85,13 +85,13 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
   fixExp = FALSE
   if(!is.null(Signatures)){
     fixSig = TRUE
-    if(dim(Signatures) != c(NoSignatures,ncol(Data))){
+    if(any(dim(Signatures) != c(NoSignatures,ncol(Data)))){
       stop("The dimensions of the Signatures does not match the Data and NoSignatures") 
     }
   }
   if(!is.null(Exposures)){
     fixExp = TRUE
-    if(dim(Exposures) != c(nrow(Data),NoSignatures)){
+    if(any(dim(Exposures) != c(nrow(Data),NoSignatures))){
       stop("The dimensions of the Exposures does not match the Data and NoSignatures") 
   }
   }
@@ -113,18 +113,19 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
       Signatures = matrix(par[-c(1:(Genomes*NoSignatures))], nrow = NoSignatures, ncol = MutationTypes)
     }
     
-    EstimateOfData = Exposures%*%Signatures
+    
     
     if(!fixSig){
+      EstimateOfData = Exposures%*%Signatures
       regularUpdate = Signatures * (t(Exposures) %*% (Data/EstimateOfData))
-    Signatures = t(sapply(1:NoSignatures, function(k) glm.update(regularUpdate[k,], DesignMatrix[[k]]))) # glm update of Signatures
-    Signatures = Signatures * 1/rowSums(Signatures)          # make sure the rows sum to one
+      Signatures = t(sapply(1:NoSignatures, function(k) glm.update(regularUpdate[k,], DesignMatrix[[k]]))) # glm update of Signatures
+      Signatures = Signatures * 1/rowSums(Signatures)          # make sure the rows sum to one
+    
     }
     
-    EstimateOfData = Exposures%*%Signatures
-    
     if(!fixExp){
-    Exposures = Exposures * ((Data/EstimateOfData) %*% t(Signatures)) # update of exposures
+      EstimateOfData = Exposures%*%Signatures
+      Exposures = Exposures * ((Data/EstimateOfData) %*% t(Signatures)) # update of exposures
     }
     
     
@@ -187,6 +188,7 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
   Output$Signatures = SignatureOptimal
   Output$Exposures = ExposureOptimal
   Output$gkl = GKLvalues[optimal]
+  Output$prmSignatures = sapply(DesignMatrix,ncol)
   
   return(Output)
 }
