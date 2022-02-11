@@ -192,4 +192,53 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
   
   return(Output)
 }
- 
+
+##################################################
+## Cosine similarity between a vector x and y
+###############################################
+similarity <- function(x,y){
+  dot.prod <- sum(x*y) 
+  norm.x <- sqrt(sum(x^2))
+  norm.y <- sqrt(sum(y^2))
+  frac <- dot.prod / (norm.x * norm.y)
+  return(as.numeric(frac))
+}
+
+#' @title Cosine similarity of mutational signatures
+#'
+#'
+#' @param H1 Numeric matrix of mutational signatures. Each row should represent a signature.
+#' @param H2 Numeric matrix of mutational signatures. Each row should represent a signature.
+#'
+#'
+#' @return List of match and cosine similarities
+#' - \texttt{match} Vector of indexes to reorder the second matrix to match the first one.
+#' - \texttt{cossim} Vector of cosine similarities between the matched signatures.
+#' - \texttt{distmat} Matrix of cosine similarities between all signatures.
+#' 
+#' @export
+cosMatch <- function(H1,H2){
+  if (!all.equal(dim(H1),dim(H2))){
+    stop("The two signature matrices need to have the same dimensions")
+  }
+  K <- nrow(H1)
+  d <- numeric(K)
+  m <- numeric(K)
+  dist <- sapply(1:K, function(y) sapply(1:K,function(x) similarity(H1[x,],H2[y,])))
+  dist <- as.matrix(dist)
+  distmat = dist
+  for(s in 1:K){
+    max.dist <- max(dist)
+    remove = which(dist == max.dist, arr.ind = TRUE)
+    dist[remove[1,1],] <- 0
+    dist[,remove[1,2]] <- 0
+    d[remove[1,1]] <- max.dist
+    m[remove[1,1]] <- remove[1,2]
+  }
+  
+  Output <- list()
+  Output$match <- m          # the best matched signatures
+  Output$cossim <- d          # Individual cosine similarity numbered after signatures in H1
+  Output$distmat <- distmat 
+  return(Output)
+}

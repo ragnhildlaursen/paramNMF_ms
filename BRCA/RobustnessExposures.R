@@ -1,33 +1,9 @@
 rm(list=ls())
-################################################
-## Checking robustness of mutational signatures 
-################################################
-source("GitModelSelection.R")
+################################################################
+## Robustness of exposures
+################################################################
 
-# load BRCA data 
-load("BRCA/BRCA21.RData")
-V = t(V) # change to dimension patients x mutation types
-##--------------------------------------------------------
-## Factors
-##--------------------------------------------------------
-## The factors for 96 different mutation types 
-L = factor(substr(colnames(V), start = 1, stop = 1))
-M = factor(substr(colnames(V), start = 3, stop = 5))
-R = factor(substr(colnames(V), start = 7, stop = 7))
-
-##--------------------------------------------------------
-## Parametrizations of a signature
-##--------------------------------------------------------
-## Model matrices
-Mfull = model.matrix(~0+L*M*R)      # full model
-Mdi = model.matrix(~0+L*M + M*R)    # di-nucleotide model
-Mmono = model.matrix(~0+L + M + R)  # multiplicative model
-
-load("BRCAmodelFactors.RData")
-TriRes = resFactors[[15]]
-DiRes = resFactors[[11]]
-MixRes = resFactors[[9]]
-MonoRes = resFactors[[1]]
+source("loadBRCAmodels.R")
 ##-----------------------------------------------------------------------
 ## Sample a number of mutations from each patient (downsampling)
 ##-----------------------------------------------------------------------
@@ -82,15 +58,17 @@ mnMix <- rowMeans(ResCosineMatMix)
 mnDi <- rowMeans(ResCosineMatDi)
 mnMono <- rowMeans(ResCosineMatMono)
 # plot mean
-plot(mnTri,ylim=c(0,1),col="red",pch=19,cex=1)
+plot(mnTri,ylim=c(0.5,1),col="red",pch=19,cex=1)
 points(mnMix,col="blue",pch=19,cex=0.8)
 points(mnDi,col="green",pch=19,cex=0.6)
-points(mnMono,col="orange",pch=19,cex=0.4)
+points(mnMono,col="orange",pch=19,cex=0.5)
 ## Var
 vrTri <- apply(ResCosineMatTri,1,var)
-
 vrMix <- apply(ResCosineMatMix,1,var)
+vrDi <- apply(ResCosineMatDi,1,var)
+vrMono <- apply(ResCosineMatMono,1,var)
 plot(vrTri,col="red",pch=19,cex=0.8)
+points(vrMix,col="blue",pch=19,cex=0.6)
 points(vrMix,col="blue",pch=19,cex=0.6)
 ## Quantiles
 qTri <- apply(ResCosineMatTri,1,quantile,probs=c(0.05,0.95))
