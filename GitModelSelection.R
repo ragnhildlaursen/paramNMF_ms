@@ -104,7 +104,7 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
   Exposurelist = list()            # list of exposure matrices
   
   ## Function with one E and M step
-  EMstep = function(x){
+  EMstep = function(x, param = FALSE){
     par = exp(x)
     if(!fixExp){
       Exposures = matrix(par[c(1:(Genomes*NoSignatures))], nrow = Genomes, ncol = NoSignatures)
@@ -113,14 +113,16 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
       Signatures = matrix(par[-c(1:(Genomes*NoSignatures))], nrow = NoSignatures, ncol = MutationTypes)
     }
     
-    
-    
     if(!fixSig){
       EstimateOfData = Exposures%*%Signatures
       regularUpdate = Signatures * (t(Exposures) %*% (Data/EstimateOfData))
-      Signatures = t(sapply(1:NoSignatures, function(k) glm.update(regularUpdate[k,], DesignMatrix[[k]]))) # glm update of Signatures
-      Signatures = Signatures * 1/rowSums(Signatures)          # make sure the rows sum to one
-    
+      if(param){
+        glmUpdate = t(sapply(1:NoSignatures, function(k) glm.update(regularUpdate[k,], DesignMatrix[[k]]))) # glm update of Signatures
+        Signatures = glmUpdate
+      }else{
+        Signatures = regularUpdate
+      }
+      Signatures = diag(1/rowSums(Signatures))%*%Signatures          # make sure the rows sum to one
     }
     
     if(!fixExp){
@@ -164,8 +166,10 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
     Initial = c(as.vector(Exposures),as.vector(Signatures))
     
     #SQUAREM run of the EM algorithm
-    ResultSqr = squarem(Initial, fixptfn = EMstep, objfn = gklobj, control = list(tol = tolerance, maxiter = maxIter))
+    ResultSqrFull = squarem(par = Initial, fixptfn = EMstep, objfn = gklobj, control = list(tol = tolerance, maxiter = 100))
+    ResultSqr = squarem(par = ResultSqrFull$par, fixptfn = function(x) EMstep(x,param = T), objfn = gklobj, control = list(tol = tolerance, maxiter = maxIter))
     par = exp(ResultSqr$par) # parameters
+    
     if(!fixExp){
       Exposures = matrix(par[c(1:(Genomes*NoSignatures))], nrow = Genomes, ncol = NoSignatures)
     }
