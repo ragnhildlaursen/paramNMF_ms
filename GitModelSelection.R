@@ -34,7 +34,7 @@ gkl.dev = function(y, mu){
 #' @return estimate of data with GLM dependency
 #' @export
 #'
-glm.update = function(y,X, maxiter = 25, epsilon = 1e-8){
+glm.update = function(y,X, maxiter = 40, epsilon = 1e-8){
   if(length(y) <= ncol(X)){
     return(y)
   }else{
@@ -168,6 +168,7 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
     #SQUAREM run of the EM algorithm
     ResultSqrFull = squarem(par = Initial, fixptfn = EMstep, objfn = gklobj, control = list(tol = tolerance, maxiter = 100))
     ResultSqr = squarem(par = ResultSqrFull$par, fixptfn = function(x) EMstep(x,param = T), objfn = gklobj, control = list(tol = tolerance, maxiter = maxIter))
+    print(ResultSqr$fpevals)
     par = exp(ResultSqr$par) # parameters
     
     if(!fixExp){
