@@ -166,13 +166,18 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
     Initial = c(as.vector(Exposures),as.vector(Signatures))
     
     #SQUAREM run of the EM algorithm
-    ResultSqrFull = squarem(par = Initial, fixptfn = EMstep, objfn = gklobj, control = list(tol = tolerance, maxiter = 100))
-    ResultSqr = squarem(par = ResultSqrFull$par, fixptfn = function(x) EMstep(x,param = T), objfn = gklobj, control = list(tol = tolerance, maxiter = maxIter))
-    print(ResultSqr$fpevals)
+    ResultSqr = squarem(par = Initial, fixptfn = EMstep, objfn = gklobj, control = list(tol = tolerance, maxiter = maxIter))
+    #ResultSqr = squarem(par = ResultSqrFull$par, fixptfn = function(x) EMstep(x,param = T), objfn = gklobj, control = list(tol = tolerance, maxiter = maxIter))
+    #print(ResultSqrFull$fpevals)
     par = exp(ResultSqr$par) # parameters
     
     Exposures = matrix(par[c(1:(Genomes*NoSignatures))], nrow = Genomes, ncol = NoSignatures)
     Signatures = matrix(par[-c(1:(Genomes*NoSignatures))], nrow = NoSignatures, ncol = MutationTypes)
+    
+    # Update signatures with parametrization
+    glmUpdate = t(sapply(1:NoSignatures, function(k) glm.update(Signatures[k,], DesignMatrix[[k]]))) # glm update of Signatures
+    Signatures = glmUpdate
+    Signatures = diag(1/rowSums(Signatures))%*%Signatures
     
     GKLvalues[i] = gklobj(log(par))
     Signaturelist[[i]] = Signatures
