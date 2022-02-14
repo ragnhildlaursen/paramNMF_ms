@@ -138,12 +138,11 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
   # Function to create GKL value
   gklobj = function(x){
     par = exp(x)
-    if(!fixExp){
-      Exposures = matrix(par[c(1:(Genomes*NoSignatures))], nrow = Genomes, ncol = NoSignatures)
-    }
-    if(!fixSig){
-      Signatures = matrix(par[-c(1:(Genomes*NoSignatures))], nrow = NoSignatures, ncol = MutationTypes)
-    }
+    
+    Exposures = matrix(par[c(1:(Genomes*NoSignatures))], nrow = Genomes, ncol = NoSignatures)
+    
+    Signatures = matrix(par[-c(1:(Genomes*NoSignatures))], nrow = NoSignatures, ncol = MutationTypes)
+    
     
     EstimateOfData = Exposures%*%Signatures
     GKL <- gkl.dev(as.vector(Data),as.vector(EstimateOfData)) # GKLD value
@@ -166,12 +165,10 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
     #SQUAREM run of the EM algorithm
     ResultSqr = squarem(Initial, fixptfn = EMstep, objfn = gklobj, control = list(tol = tolerance, maxiter = maxIter))
     par = exp(ResultSqr$par) # parameters
-    if(!fixExp){
-      Exposures = matrix(par[c(1:(Genomes*NoSignatures))], nrow = Genomes, ncol = NoSignatures)
-    }
-    if(!fixSig){
-      Signatures = matrix(par[-c(1:(Genomes*NoSignatures))], nrow = NoSignatures, ncol = MutationTypes)
-    }
+    
+    Exposures = matrix(par[c(1:(Genomes*NoSignatures))], nrow = Genomes, ncol = NoSignatures)
+    Signatures = matrix(par[-c(1:(Genomes*NoSignatures))], nrow = NoSignatures, ncol = MutationTypes)
+    
     GKLvalues[i] = gklobj(log(par))
     Signaturelist[[i]] = Signatures
     Exposurelist[[i]] = Exposures
