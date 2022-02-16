@@ -25,12 +25,13 @@ noSig = 4
 
 nSim <- 10  # 5 if small study. 100 if intermediate. 200 if large.
 init = 20   # number of initialisations
-tolhigh = 1
-tol = 0.5
+tolhigh = 0.2
+tol = 0.1
 
-TriRes <- NMFglmSQR(Data = V, NoSignatures = noSig, DesignMatrix = rep(list(Mfull),noSig), tol=0.5,Seeds=c(1:init))
-DiRes <- NMFglmSQR(Data = V, NoSignatures = noSig, DesignMatrix = rep(list(Mdi),noSig),tol=0.5,Seeds=c(1:init))
-MonoRes <- NMFglmSQR(Data = V, NoSignatures = noSig, DesignMatrix = rep(list(Mmono),noSig),tol=0.5,Seeds=c(1:init))
+TriRes <- NMFglmSQR(Data = V, NoSignatures = noSig, DesignMatrix = rep(list(Mfull),noSig), tol=tol,Seeds=c(1:init))
+DiRes <- NMFglmSQR(Data = V, NoSignatures = noSig, DesignMatrix = rep(list(Mdi),noSig),tol=tol,Seeds=sample(1:1000,init))
+MixRes <- NMFglmSQR(Data = V, NoSignatures = noSig, DesignMatrix = list(Mmono,Mdi,Mdi,Mfull),tol=tol,Seeds=sample(1:1000,init))
+MonoRes <- NMFglmSQR(Data = V, NoSignatures = noSig, DesignMatrix = rep(list(Mmono),noSig),tol=tol,Seeds=c(1:init))
 
 ResCosineMatTri <- matrix(0,nrow=noSig,ncol=nSim) 
 ResCosineMatDi <- matrix(0,nrow=noSig,ncol=nSim) 
