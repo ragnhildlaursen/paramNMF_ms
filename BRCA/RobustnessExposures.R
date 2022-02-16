@@ -26,27 +26,14 @@ for (nsim in 1:nSim){
     sampleV[i,] <- tabulate(sim,nbins=nMtTps)
   }
   ResultFixTri <- NMFglmSQR(Data = sampleV, NoSignatures = 4, Signatures = TriRes$Signatures,tol=0.2,Seeds=sample(1:100,3))
-  ResultFixMix <- NMFglmSQR(Data = sampleV, NoSignatures = 4, Signatures = MixRes$Signatures,tol=0.2,Seeds=sample(1:100,3))
+  #ResultFixMix <- NMFglmSQR(Data = sampleV, NoSignatures = 4, Signatures = MixRes$Signatures,tol=0.2,Seeds=sample(1:100,3))
   ResultFixDi <- NMFglmSQR(Data = sampleV, NoSignatures = 4, Signatures = DiRes$Signatures,tol=0.2,Seeds=sample(1:100,3))
   ResultFixMono <- NMFglmSQR(Data = sampleV, NoSignatures = 4, Signatures = MonoRes$Signatures,tol=0.2,Seeds=sample(1:100,3))
+  
   ## Compare exposures: Cosine similarity for each patient
-  for (i in 1:nG){
-    a <- TriRes$Exposures[i,]
-    b <- ResultFixTri$Exposures[i,]
-    ResCosineMatTri[i,nsim] <- sum(a*b)/sqrt(sum(a^2)*sum(b^2))
-    
-    a <- MixRes$Exposures[i,]
-    b <- ResultFixMix$Exposures[i,]
-    ResCosineMatMix[i,nsim] <- sum(a*b)/sqrt(sum(a^2)*sum(b^2))
-    
-    a <- DiRes$Exposures[i,]
-    b <- ResultFixDi$Exposures[i,]
-    ResCosineMatDi[i,nsim] <- sum(a*b)/sqrt(sum(a^2)*sum(b^2))
-    
-    a <- MonoRes$Exposures[i,]
-    b <- ResultFixMono$Exposures[i,]
-    ResCosineMatMono[i,nsim] <- sum(a*b)/sqrt(sum(a^2)*sum(b^2))
-  }
+  ResCosineMatTri[,nsim] = cosMatch(TriRes$Exposures,ResultFixTri$Exposures)$cossim
+  ResCosineMatDi[,nsim] = cosMatch(DiRes$Exposures,ResultFixDi$Exposures)$cossim
+  ResCosineMatMono[,nsim] = cosMatch(MonoRes$Exposures,ResultFixMono$Exposures)$cossim
 }
 
 ##------------------------------------------------------------------
@@ -94,3 +81,6 @@ lines(c(14,15),rep(0.2,2),lty=1,lwd=2)
 text(15,0.2,"Quantile interval",pos=4,cex=1.2)
 text(1:21,rep(0.05,15),nSimMt,cex=0.8)
 text(0.5,0.12,"Number of sampled mutations",pos=4,cex=1.2)
+
+ResultFixDi <- NMFglmSQR(Data = V, NoSignatures = 4, Signatures = DiRes$Signatures,tol=0.2,Seeds=3)
+cosMatch(DiRes$Signatures,ResultFixDi$Signatures)
