@@ -113,21 +113,17 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
       Signatures = matrix(par[-c(1:(Genomes*NoSignatures))], nrow = NoSignatures, ncol = MutationTypes)
     }
     
-    
-    
     if(!fixSig){
       EstimateOfData = Exposures%*%Signatures
       regularUpdate = Signatures * (t(Exposures) %*% (Data/EstimateOfData))
       Signatures = t(sapply(1:NoSignatures, function(k) glm.update(regularUpdate[k,], DesignMatrix[[k]]))) # glm update of Signatures
       Signatures = Signatures * 1/rowSums(Signatures)          # make sure the rows sum to one
-    
     }
     
     if(!fixExp){
       EstimateOfData = Exposures%*%Signatures
       Exposures = Exposures * ((Data/EstimateOfData) %*% t(Signatures)) # update of exposures
     }
-    
     
     par = c(as.vector(Exposures),as.vector(Signatures))
     par[par <= 0] = .Machine$double.eps
@@ -140,9 +136,7 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
     par = exp(x)
     
     Exposures = matrix(par[c(1:(Genomes*NoSignatures))], nrow = Genomes, ncol = NoSignatures)
-    
     Signatures = matrix(par[-c(1:(Genomes*NoSignatures))], nrow = NoSignatures, ncol = MutationTypes)
-    
     
     EstimateOfData = Exposures%*%Signatures
     GKL <- gkl.dev(as.vector(Data),as.vector(EstimateOfData)) # GKLD value
@@ -156,7 +150,7 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
                          nrow = Genomes, ncol = NoSignatures)       # Initialize Exposures
     }
     if(!fixSig){
-    Signatures = matrix(runif(NoSignatures*MutationTypes), 
+      Signatures = matrix(runif(NoSignatures*MutationTypes), 
                         nrow = NoSignatures, ncol = MutationTypes)  # Initialize Signatures
     }
     
