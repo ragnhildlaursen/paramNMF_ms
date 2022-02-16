@@ -75,7 +75,7 @@ glm.update = function(y,X, maxiter = 25, epsilon = 1e-8){
 #'
 NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix), 
                      DesignMatrix = rep(list(diag(ncol(Data))),NoSignatures), 
-                     tolerance = 1e-2, maxIter = 5000, Seeds = c(1,2,3), Exposures = NULL, Signatures = NULL){
+                     tolerance = 1e-2, maxIter = 5000, initial = 50, Exposures = NULL, Signatures = NULL){
   
   if(!is.list(DesignMatrix)) stop("DesignMatrix needs to be a list of matrices.")
   if(NoSignatures != length(DesignMatrix)) stop("NoSignatures different from number of specified matrices in DesignMatrix.")
@@ -99,9 +99,10 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
   Genomes       = dim(Data)[1]  # genomes
   MutationTypes = dim(Data)[2]  # mutation types
   
-  GKLvalues = rep(0,length(Seeds)) # Vector of different Generalised Kullback Leibler(GKL) values
-  Signaturelist = list()           # list of signature matrices
-  Exposurelist = list()            # list of exposure matrices
+  GKLvalues = numeric(initial)  # Vector of different Generalised Kullback Leibler(GKL) values
+  paramlist = list()                # List of parameters
+  #Signaturelist = list()           # list of signature matrices
+  #Exposurelist = list()            # list of exposure matrices
   
   ## Function with one E and M step
   EMstep = function(x){
@@ -143,8 +144,7 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
     return(GKL)
   }
   
-  for(i in 1:length(Seeds)){
-    set.seed(Seeds[i])                                              # Setting fixed seed 
+  for(i in 1:initial){
     if(!fixExp){
       Exposures = matrix(runif(Genomes*NoSignatures), 
                          nrow = Genomes, ncol = NoSignatures)       # Initialize Exposures
@@ -157,29 +157,30 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
     Initial = c(as.vector(Exposures),as.vector(Signatures))
     
     #SQUAREM run of the EM algorithm
-    ResultSqr = squarem(Initial, fixptfn = EMstep, objfn = gklobj, control = list(tol = tolerance, maxiter = maxIter))
-    par = exp(ResultSqr$par) # parameters
+    ResultSqr = squarem(Initial, fixptfn = EMstep, objfn = gklobj, control = list(tol = tolerance, maxiter = 100))
     
-    Exposures = matrix(par[c(1:(Genomes*NoSignatures))], nrow = Genomes, ncol = NoSignatures)
-    Signatures = matrix(par[-c(1:(Genomes*NoSignatures))], nrow = NoSignatures, ncol = MutationTypes)
-    
-    GKLvalues[i] = gklobj(log(par))
-    Signaturelist[[i]] = Signatures
-    Exposurelist[[i]] = Exposures
+    GKLvalues[i] = ResultSqr$value.objfn # object value
+    paramlist[[i]] = ResultSqr$par       # parameters
   }
+  
   optimal = which.min(GKLvalues)
-  SignatureOptimal = Signaturelist[[optimal]]
-  ExposureOptimal = Exposurelist[[optimal]]
+  ResultSqr = squarem(paramlist[[optimal]], fixptfn = EMstep, objfn = gklobj, control = list(tol = tolerance, maxiter = maxIter))
+  par = exp(ResultSqr$par)
+  
+  Exposures = matrix(par[c(1:(Genomes*NoSignatures))], nrow = Genomes, ncol = NoSignatures)
+  Signatures = matrix(par[-c(1:(Genomes*NoSignatures))], nrow = NoSignatures, ncol = MutationTypes)
+  
   
   # Make columns of signatures sum to one
-  ExposureOptimal =  ExposureOptimal%*%diag(rowSums(SignatureOptimal))
-  SignatureOptimal = diag(1/rowSums(SignatureOptimal))%*%SignatureOptimal 
+  Exposures =  Exposures%*%diag(rowSums(Signatures))
+  Signatures = diag(1/rowSums(Signatures))%*%Signatures 
   
   Output = list()
-  Output$Signatures = SignatureOptimal
-  Output$Exposures = ExposureOptimal
-  Output$gkl = GKLvalues[optimal]
+  Output$Signatures = Signatures
+  Output$Exposures = Exposures
+  Output$gkl = ResultSqr$value.objfn
   Output$prmSignatures = sapply(DesignMatrix,ncol)
+  Output$conv = ResultSqr$convergence
   
   return(Output)
 }
