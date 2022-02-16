@@ -1,7 +1,7 @@
 #######################################
 ## Load BRCA results and models
 ######################################
-source("GitModelSelection.R")
+source("~/projects/paramNMF_ms/GitModelSelection.R")
 
 # load BRCA data 
 load("BRCA/BRCA21.RData")
@@ -18,12 +18,14 @@ R = factor(substr(colnames(V), start = 7, stop = 7))
 ## Parametrizations of a signature
 ##--------------------------------------------------------
 ## Model matrices
-Mfull = model.matrix(~0+L*M*R)      # full model
-Mdi = model.matrix(~0+L*M + M*R)    # di-nucleotide model
-Mmono = model.matrix(~0+L + M + R)  # multiplicative model
+Mfull = model.matrix(~L*M*R)      # full model
+Mdi = model.matrix(~M + L*M + M*R)    # di-nucleotide model
+Mmono = model.matrix(~L + M + R)  # multiplicative model
 
-load("BRCAmodelFactors.RData")
-TriRes = resFactors[[15]]
-DiRes = resFactors[[11]]
-MixRes = resFactors[[9]]
-MonoRes = resFactors[[1]]
+# load("BRCA/BRCAmodelFactors.RData")
+# load("BRCA/BRCAmodelRes.RData")
+# TriRes = resFactors[[15]]
+# DiRes = resFactors[[11]]
+# MixRes = resFactors[[9]]
+# MonoRes = resFactors[[1]]
+

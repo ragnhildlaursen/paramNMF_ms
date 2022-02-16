@@ -55,7 +55,7 @@ resFactors = list()
 ## We provide resMat for our run in file "GitUCUT26results.txt"
 high.tolerance <- 0.5
 low.tolerance <- 0.01
-repshigh = 50
+repshigh = 30
 for (m in 1:nModels){
   nprm1 <- ncol( MList[[m]][[1]] )
   nprm2 <- ncol( MList[[m]][[2]] )
@@ -93,11 +93,11 @@ for (m in 1:nModels){
 }
 #resMat <- resMat[sort(resMat[,"nprmtot"],index=TRUE)$ix,]
 print(resMat)
-
+par(mfrow = c(1,1))
 BIC = 2*resMat[,"GKL"] + log(21*96)*resMat[,"nprmtot"]
 plot(BIC)
 which.min(BIC)
 plot(resMat[,"GKL"])
 
-#save(resFactors, file = "BRCAmodelFactors.RData")
-#save(resMat, file = "BRCAmodelRes.RData")
+save(resFactors, file = "BRCAmodelFactors.RData")
+save(resMat, file = "BRCAmodelRes.RData")
