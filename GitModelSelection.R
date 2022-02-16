@@ -75,7 +75,7 @@ glm.update = function(y,X, maxiter = 25, epsilon = 1e-8){
 #'
 NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix), 
                      DesignMatrix = rep(list(diag(ncol(Data))),NoSignatures), 
-                     tolerance = 1e-2, maxIter = 5000, initial = 50, Exposures = NULL, Signatures = NULL){
+                     tolerance = 1e-2, maxIter = 10000, initial = 50, Exposures = NULL, Signatures = NULL){
   
   if(!is.list(DesignMatrix)) stop("DesignMatrix needs to be a list of matrices.")
   if(NoSignatures != length(DesignMatrix)) stop("NoSignatures different from number of specified matrices in DesignMatrix.")
@@ -100,9 +100,7 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
   MutationTypes = dim(Data)[2]  # mutation types
   
   GKLvalues = numeric(initial)  # Vector of different Generalised Kullback Leibler(GKL) values
-  paramlist = list()                # List of parameters
-  #Signaturelist = list()           # list of signature matrices
-  #Exposurelist = list()            # list of exposure matrices
+  paramlist = list()            # List of parameters
   
   ## Function with one E and M step
   EMstep = function(x){
@@ -118,16 +116,17 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
       EstimateOfData = Exposures%*%Signatures
       regularUpdate = Signatures * (t(Exposures) %*% (Data/EstimateOfData))
       Signatures = t(sapply(1:NoSignatures, function(k) glm.update(regularUpdate[k,], DesignMatrix[[k]]))) # glm update of Signatures
-      Signatures = Signatures * 1/rowSums(Signatures)          # make sure the rows sum to one
+      #Signatures = Signatures * 1/rowSums(Signatures)          # make sure the rows sum to one
     }
     
     if(!fixExp){
       EstimateOfData = Exposures%*%Signatures
       Exposures = Exposures * ((Data/EstimateOfData) %*% t(Signatures)) # update of exposures
+      Exposures = Exposures%*%diag(1/colSums(Exposures))           # make sure the columns sum to one
     }
     
     par = c(as.vector(Exposures),as.vector(Signatures))
-    par[par <= 0] = .Machine$double.eps
+    par[par <= .Machine$double.eps] = .Machine$double.eps
     logpar = log(par) # using log-scale to also allow negative values
     return(logpar)
   }
