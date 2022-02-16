@@ -73,9 +73,10 @@ glm.update = function(y,X, maxiter = 25, epsilon = 1e-8){
 #'  
 #' @export
 #'
+#'
 NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix), 
                      DesignMatrix = rep(list(diag(ncol(Data))),NoSignatures), 
-                     tolerance = 1e-2, maxIter = 5000, Seeds = c(1,2,3), Exposures = NULL, Signatures = NULL){
+                     tolerance = 1e-2, maxIter = 100, Seeds = c(1,2,3), Exposures = NULL, Signatures = NULL){
   
   if(!is.list(DesignMatrix)) stop("DesignMatrix needs to be a list of matrices.")
   if(NoSignatures != length(DesignMatrix)) stop("NoSignatures different from number of specified matrices in DesignMatrix.")
@@ -100,6 +101,7 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
   MutationTypes = dim(Data)[2]  # mutation types
   
   GKLvalues = rep(0,length(Seeds)) # Vector of different Generalised Kullback Leibler(GKL) values
+  conv = logical(length(Seeds))
   Signaturelist = list()           # list of signature matrices
   Exposurelist = list()            # list of exposure matrices
   
@@ -130,7 +132,7 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
     
     
     par = c(as.vector(Exposures),as.vector(Signatures))
-    par[par <= 0] = .Machine$double.eps
+    par[par <= .Machine$double.eps] = .Machine$double.eps
     logpar = log(par) # using log-scale to also allow negative values
     return(logpar)
   }
@@ -163,12 +165,17 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
     Initial = c(as.vector(Exposures),as.vector(Signatures))
     
     #SQUAREM run of the EM algorithm
-    ResultSqr = squarem(Initial, fixptfn = EMstep, objfn = gklobj, control = list(tol = tolerance, maxiter = maxIter))
+    ResultSqr = squarem(Initial, fixptfn = EMstep, objfn = gklobj, control = list(tol = tolerance, maxiter = maxIter, intermed = TRUE))
     par = exp(ResultSqr$par) # parameters
+    intermed = ResultSqr$p.intermed
+    #print(ResultSqr$fpevals)
+    cat("Seed ", i," had GKL: ",gklobj(log(par)), ". Converged ", ResultSqr$convergence, " in ", ResultSqr$fpevals, " iterations. \n")
+    #print(gklobj(log(par)))
     
     Exposures = matrix(par[c(1:(Genomes*NoSignatures))], nrow = Genomes, ncol = NoSignatures)
     Signatures = matrix(par[-c(1:(Genomes*NoSignatures))], nrow = NoSignatures, ncol = MutationTypes)
     
+    conv[i] = ResultSqr$convergence
     GKLvalues[i] = gklobj(log(par))
     Signaturelist[[i]] = Signatures
     Exposurelist[[i]] = Exposures
@@ -186,6 +193,9 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
   Output$Exposures = ExposureOptimal
   Output$gkl = GKLvalues[optimal]
   Output$prmSignatures = sapply(DesignMatrix,ncol)
+  Output$AllResults = list(Exposurelist,Signaturelist,GKLvalues)
+  Output$convergence = conv[optimal]
+  Output$intermed = intermed
   
   return(Output)
 }
