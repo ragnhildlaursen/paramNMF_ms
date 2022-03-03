@@ -4,6 +4,7 @@
 ##########################################################
 
 ## Include package "SQUAREM"
+library("gtools") ## Required for function 'combinations'
 library('SQUAREM')
 ###########################################################
 #' Generalized Kullback Leibler divergence
@@ -74,7 +75,7 @@ glm.update = function(y,X, maxiter = 25, epsilon = 1e-8){
 #'
 NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix), 
                      DesignMatrix = rep(list(diag(ncol(Data))),NoSignatures), 
-                     tolerance = 1e-2, maxIter = 5000, initial = 100, Exposures = NULL, Signatures = NULL){
+                     tolerance = 1e-2, maxIter = 10000, initial = 50, Exposures = NULL, Signatures = NULL){
   
   if(!is.list(DesignMatrix)) stop("DesignMatrix needs to be a list of matrices.")
   if(NoSignatures != length(DesignMatrix)) stop("NoSignatures different from number of specified matrices in DesignMatrix.")
@@ -114,7 +115,7 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
     if(!fixExp){
       EstimateOfData = Exposures%*%Signatures
       Exposures = Exposures * ((Data/EstimateOfData) %*% t(Signatures)) # update of exposures
-      Exposures = Exposures%*%diag(1/colSums(Exposures))                # make sure the columns sum to one
+      Exposures = Exposures%*%diag(1/colSums(Exposures))           # make sure the columns sum to one
     }
     
     if(!fixSig){
@@ -155,7 +156,7 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
     Initial = c(as.vector(Exposures),as.vector(Signatures))
     
     #SQUAREM run of the EM algorithm
-    ResultSqr = squarem(Initial, fixptfn = EMstep, objfn = gklobj, control = list(tol = tolerance, maxiter = 100))
+    ResultSqr = squarem(Initial, fixptfn = EMstep, objfn = gklobj, control = list(tol = tolerance, maxiter = 200))
     
     GKLvalues[i] = ResultSqr$value.objfn # object value
     paramlist[[i]] = ResultSqr$par       # parameters
@@ -164,7 +165,6 @@ NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix),
   optimal = which.min(GKLvalues)
   ResultSqr = squarem(paramlist[[optimal]], fixptfn = EMstep, objfn = gklobj, control = list(tol = tolerance, maxiter = maxIter))
   par = exp(ResultSqr$par)
-  print(ResultSqr$fpevals)
   
   Exposures = matrix(par[c(1:(Genomes*NoSignatures))], nrow = Genomes, ncol = NoSignatures)
   Signatures = matrix(par[-c(1:(Genomes*NoSignatures))], nrow = NoSignatures, ncol = MutationTypes)

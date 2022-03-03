@@ -101,3 +101,14 @@ plot(resMat[,"GKL"])
 
 save(resFactors, file = "BRCAmodelFactors.RData")
 save(resMat, file = "BRCAmodelRes.RData")
+
+### Test for optimal number of signatures
+gkl = numeric(10)
+for(i in 1:10){
+  res <- NMFglmSQR(Data=V,NoSignatures=i+1,
+                   tolerance=0.1)
+  gkl[i] = res$gkl
+}
+
+bic = 2*gkl + log(21)*(21 + 96)*c(2:11)
+plot(c(2:11),bic)
