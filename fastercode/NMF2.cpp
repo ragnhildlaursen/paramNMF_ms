@@ -8,16 +8,6 @@ using namespace Rcpp;
 
 // [[Rcpp::depends(RcppArmadillo)]]
 
-// This is a simple example of exporting a C++ function to R. You can
-// source this function into an R session using the Rcpp::sourceCpp 
-// function (or via the Source button on the editor toolbar). Learn
-// more about Rcpp at:
-//
-//   http://www.rcpp.org/
-//   http://adv-r.had.co.nz/Rcpp.html
-//   http://gallery.rcpp.org/
-//
-
 double gkldev(arma::colvec y, arma::colvec mu) {
   int ySize = y.size();
   double sum = 0;
@@ -54,22 +44,6 @@ arma::rowvec glmUpdate(arma::colvec y, arma::mat X, int maxIter = 25, double eps
   return mu.as_row();
 }
 
-std::tuple<arma::mat, arma::mat, arma::mat> update(arma::mat data, arma::mat estimate, arma::mat designMatrices[], arma::mat exposures, arma::mat signatures) {
-    exposures = exposures % ((data/estimate) * arma::trans(signatures));
-    exposures = arma::normalise(exposures, 1);
-    estimate = exposures * signatures;
-    
-    signatures = signatures % (arma::trans(exposures) * (data/estimate));
-    
-    for(int row = 0; row<signatures.n_rows; row++) {
-      signatures.row(row) = glmUpdate(arma::trans(signatures.row(row)), designMatrices[row]);
-    }
-    
-    estimate = exposures * signatures;
-  
-  return {exposures, signatures, estimate};
-}
-
 std::tuple<arma::mat, arma::mat, double> nmf1glm(arma::mat data, arma::mat designMatrices[], int noSignatures, int iter = 5000) {
   int genomes = data.n_rows;
   int mutTypes = data.n_cols;
@@ -83,13 +57,13 @@ std::tuple<arma::mat, arma::mat, double> nmf1glm(arma::mat data, arma::mat desig
     exposures = exposures % ((data/estimate) * arma::trans(signatures));
     exposures = arma::normalise(exposures, 1);
     estimate = exposures * signatures;
-    
+
     signatures = signatures % (arma::trans(exposures) * (data/estimate));
-    
+
     for(int row = 0; row<noSignatures; row++) {
       signatures.row(row) = glmUpdate(arma::trans(signatures.row(row)), designMatrices[row]);
     }
-    
+
     estimate = exposures * signatures;
   }
   double gkl = gkldev(arma::vectorise(data),arma::vectorise(estimate));
