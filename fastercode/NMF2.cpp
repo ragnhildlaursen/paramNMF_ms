@@ -21,13 +21,14 @@ double gkldev(arma::colvec y, arma::colvec mu) {
   return sum;
 }
 
-
-arma::rowvec glmUpdate(arma::colvec y, arma::mat X, int maxIter = 25, double epsilon=1e-8) {
+// [[Rcpp::export]]
+arma::rowvec glmUpdate(arma::colvec y, arma::mat X, int maxIter = 50, double epsilon=1e-8) {
   if (y.size() <= X.n_cols) {
+    //Rcout << "Iterations:";
     return y.as_row();
   }
-  arma::colvec noise = arma::randu(y.size());
-  arma::colvec mu = y + noise;
+  //arma::colvec noise = arma::randu(y.size());
+  arma::colvec mu = y + 0.1;
   double old = gkldev(y, mu);
   for (int i=0; i<maxIter; i++) {
     arma::colvec z = arma::log(mu) + (y-mu) / mu;
@@ -72,7 +73,7 @@ std::tuple<arma::mat, arma::mat, double> nmf1glm(arma::mat data, arma::mat desig
 }
 
 // [[Rcpp::export]]
-List nmfprm(arma::mat data, List designMatrices, int noSignatures, int maxiter = 10000, double tolerance = 1e-8, int initial = 100) {
+List nmfprm(arma::mat data, List designMatrices, int noSignatures, int maxiter = 10000, double tolerance = 1e-8, int initial = 100, int smallIter = 500) {
   
   arma::mat designMatricesArray[noSignatures];
   for(int i=0; i<noSignatures; i++) {
@@ -80,13 +81,13 @@ List nmfprm(arma::mat data, List designMatrices, int noSignatures, int maxiter =
     designMatricesArray[i] = arma::mat(x.begin(), x.nrow(), x.ncol(), false);
   }  
   
-  auto res = nmf1glm(data, designMatricesArray, noSignatures, 500);
+  auto res = nmf1glm(data, designMatricesArray, noSignatures, smallIter);
   auto exposures = std::get<0>(res);
   auto signatures = std::get<1>(res);
   auto gklValue = std::get<2>(res);
   
   for(int i = 1; i < initial; i++){
-    auto res = nmf1glm(data, designMatricesArray, noSignatures, 500);
+    auto res = nmf1glm(data, designMatricesArray, noSignatures, smallIter);
     auto gklNew = std::get<2>(res);
     
     if(gklNew < gklValue){

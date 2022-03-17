@@ -13,9 +13,9 @@ setwd("~/projects/paramNMF_ms")
 source("BRCA/loadBRCA214models.R")
 
 MonoRes = resFactors[[1]]
-MixRes = resFactors[[13]]
-DiRes = resFactors[[37]]
-TriRes = resFactors[[45]]
+MixRes = resFactors[[8]]
+DiRes = resFactors[[11]]
+TriRes = resFactors[[15]]
 
 mMono = cosMatch(TriRes$signatures, MonoRes$signatures)$match
 mMix = cosMatch(TriRes$signatures, MixRes$signatures)$match
@@ -28,11 +28,11 @@ sampleV <- V
 nG <- dim(V)[1]     # Number of patients (genomes)
 nMtTps <- dim(V)[2] # Number of mutation types
 nMt <- rowSums(V)
-noSig = 8
+noSig = 4
 
 nSim <- 50  # 5 if small study. 100 if intermediate. 200 if large.
-init = 50   # number of initialisations
-tol = 1e-6
+init = 2   # number of initialisations
+tol = 1
 
 # TriRes <- NMFglmSQR(Data = sampleV, NoSignatures = noSig, DesignMatrix = rep(list(Mfull),noSig), tolerance = tol,initial = init)
 # MixRes <- NMFglmSQR(Data = sampleV, NoSignatures = noSig, DesignMatrix = list(Mfull,Mdi,Mdi,Mmono),tol=tol,initial = init)
@@ -51,11 +51,11 @@ ResCosineMatMono <- matrix(0,nrow=noSig,ncol=nSim)
 for(nsim in 1:nSim){
   cat(nsim,"out of",nSim,"\n")
   nSimMt <- rowSums(V) # could potentially downsample
-  for (i in 1:nG){
-    set.seed(NULL)
-    sim <- sample( x=1:nMtTps , size=nSimMt[i], replace=TRUE, prob=V[i,])
-    sampleV[i,] <- tabulate(sim,nbins=nMtTps)
-  }
+  # for (i in 1:nG){
+  #   set.seed(NULL)
+  #   sim <- sample( x=1:nMtTps , size=nSimMt[i], replace=TRUE, prob=V[i,])
+  #   sampleV[i,] <- tabulate(sim,nbins=nMtTps)
+  # }
   
   # ResultFixTri <- NMFglmSQR(Data = sampleV, NoSignatures = noSig, DesignMatrix = rep(list(Mfull),noSig), tol=tol,initial = init)
   # ResultFixMix <- NMFglmSQR(Data = sampleV, NoSignatures = noSig, DesignMatrix = list(Mfull,Mdi,Mdi,Mmono),tol=tol,initial = init)
@@ -63,10 +63,20 @@ for(nsim in 1:nSim){
   # ResultFixMono <- NMFglmSQR(Data = sampleV, NoSignatures = noSig, DesignMatrix = rep(list(Mmono),noSig),tol=tol,initial = init)
   # cat("GKL Di:", ResultFixDi$gkl, " with convergence ", ResultFixDi$conv, "\n")
   # cat("GKL Mix:", ResultFixMix$gkl, " with convergence ", ResultFixMix$conv, "\n")
-  
+  estimate = TriRes$exposures%*%TriRes$signatures
+  sampleV = matrix(rpois(nG*nMtTps, estimate), nrow = nG)
   ResultFixTri <- nmfprm(data = sampleV, noSignatures = noSig, designMatrices = rep(list(Mfull),noSig), tol=tol,initial = init)
-  ResultFixMix <- nmfprm(data = sampleV, noSignatures = noSig, designMatrices = list(Mmono,Mmono,Mmono,Mmono,Mfull,Mfull,Mdi,Mdi),tol=tol,initial = init)
+  
+  estimate = MixRes$exposures%*%MixRes$signatures
+  sampleV = matrix(rpois(nG*nMtTps, estimate), nrow = nG)
+  ResultFixMix <- nmfprm(data = sampleV, noSignatures = noSig, designMatrices = list(Mmono,Mfull,Mdi,Mdi),tol=tol,initial = init)
+  
+  estimate = MixRes$exposures%*%MixRes$signatures
+  sampleV = matrix(rpois(nG*nMtTps, estimate), nrow = nG)
   ResultFixDi <- nmfprm(data = sampleV, noSignatures = noSig, designMatrices = rep(list(Mdi),noSig),tol=tol,initial = init)
+  
+  estimate = MixRes$exposures%*%MixRes$signatures
+  sampleV = matrix(rpois(nG*nMtTps, estimate), nrow = nG)
   ResultFixMono <- nmfprm(data = sampleV, noSignatures = noSig, designMatrices = rep(list(Mmono),noSig),tol=tol,initial = init)
   # Compare signatures: Cosine similarity for each patient
   ResCosineMatTri[,nsim] = cosMatch(TriRes$signatures,ResultFixTri$signatures)$cossim

@@ -10,14 +10,14 @@ source("~/projects/paramNMF_ms/GitModelSelection.R")
 # BRCA21
 source("BRCA/loadBRCA21models.R")
 resMono = resFactors[[1]]
-resMix = resFactors[[9]]
+resMix = resFactors[[8]]
 resDi = resFactors[[11]]
 resTri = resFactors[[15]]
-
-mMono = cosMatch(resTri$Signatures, resMono$Signatures)$match
-mMix = cosMatch(resTri$Signatures, resMix$Signatures)$match
-mDi = cosMatch(resTri$Signatures, resDi$Signatures)$match
-
+resTri$signatures = resTri$signatures[c(1,4,3,2),]
+mMono = cosMatch(resTri$signatures, resMono$signatures)$match
+mMix = cosMatch(resTri$signatures, resMix$signatures)$match
+mDi = cosMatch(resTri$signatures, resDi$signatures)$match
+mTri = cosMatch(resTri$signatures, resTri$signatures)$match
 
 ###################################################################################################
 ## plot signatures
@@ -29,19 +29,19 @@ sub = factor(rep(c("C > A","C > G","C > T","T > A","T > C","T > G"), each = 16))
 
 col.model = c(brewer.pal(7, name = "Blues")[c(4)], brewer.pal(7, name = "Oranges")[5], brewer.pal(7, name = "Blues")[c(7)])
 # mono
-dat = data.frame(m = factor(colnames(V), levels=unique(colnames(V))), sub, S =  t(resMono$Signatures[mMono,]))
+dat = data.frame(m = factor(colnames(V), levels=unique(colnames(V))), sub, S =  t(resMono$signatures[mMono,]))
 dat$type = "mono"
 datmono = reshape(dat, varying = c("S.1","S.2","S.3","S.4"), direction = "long", v.names = "true", timevar = "Signature")
 # mix
-dat = data.frame(m = factor(colnames(V), levels=unique(colnames(V))), sub, S =  t(resMix$Signatures[mMix,]))
+dat = data.frame(m = factor(colnames(V), levels=unique(colnames(V))), sub, S =  t(resMix$signatures[mMix,]))
 dat$type = "mix"
 datmix = reshape(dat, varying = c("S.1","S.2","S.3","S.4"), direction = "long", v.names = "true", timevar = "Signature")
 # di
-dat = data.frame(m = factor(colnames(V), levels=unique(colnames(V))), sub, S =  t(resDi$Signatures[mDi,]))
+dat = data.frame(m = factor(colnames(V), levels=unique(colnames(V))), sub, S =  t(resDi$signatures[mDi,]))
 dat$type = "di"
 datdi = reshape(dat, varying = c("S.1","S.2","S.3","S.4"), direction = "long", v.names = "true", timevar = "Signature")
 # tri
-dat = data.frame(m = factor(colnames(V), levels=unique(colnames(V))), sub, S =  t(resTri$Signatures))
+dat = data.frame(m = factor(colnames(V), levels=unique(colnames(V))), sub, S =  t(resTri$signatures[mTri,]))
 dat$type = "tri"
 dattri = reshape(dat, varying = c("S.1","S.2","S.3","S.4"), direction = "long", v.names = "true", timevar = "Signature")
 
@@ -59,29 +59,31 @@ col.sub = c("#800080", "#FF9912", "#436EEE", "#ffdf12", "#27408B", "#E066FF")
 col.comb = c(rep(col.model[3],6),rep(col.model[3],6),rep(col.model[3],6),rep(col.model[3],6))
 
 datall$comb = paste0(datall$time,datall$sub)
-datall$type = factor(datall$type, levels = c("mono","mix","di","tri"))
+datall$type = factor(datall$type, levels = c("mono","di","mix","tri"))
 
 plots = list()
 colors2 = c("#438EEE", "#6A0136","#FF9912", "#698F3F")
 colors = c("#800080", "#436EEE","#FF9912", "#27408B")
-colors3 = c("#AC0136","#436EEE", "#FF9912", "#27408B")
+colors3 = c("#AC0136","#FF9912", "#436EEE", "#27408B")
 col.list = list(colors[c(1,1,3,4)],colors[c(1,4,3,4)],colors[c(1,3,3,4)],colors[c(1,3,3,4)])
 for(sig in 1:4){
 plots[[sig]] = ggplot(datall[datall$Signature == sig, ], aes(x = m, y = true, fill = type))+
   geom_bar(stat = "identity", width = 0.5)+
-  facet_grid(rows = vars(type), cols = vars(sub), scale = "free", switch = "x",labeller = labeller(time = time.labs))+
-  theme(text = element_text(size=10, face = "bold"), 
+  facet_grid(rows = vars(type), cols = vars(sub), scale = "free_x", switch = "x",labeller = labeller(time = time.labs))+
+  #theme_bw()+
+  theme(text = element_text(size=8, face = "bold"), 
         axis.text.x=element_blank(),
         strip.text = element_blank(),
-        axis.ticks = element_blank(), 
+        axis.ticks.x = element_blank(),
         #legend.position = "none", 
         #strip.text.y.right = element_text(angle = -90, size = 8),
         strip.background.x = element_rect(color="black", fill="white",linetype="blank"),
-        strip.text.x = element_text(size = 9), panel.spacing.x = unit(0,"line"))+ 
+        strip.text.x = element_text(size = 9), panel.spacing.x = unit(0.2,"line"))+ 
   ylab("")+xlab("")+
   ggtitle(paste("Signature",sig))+
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1))+
-  scale_fill_manual(values = colors3)
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1), n.breaks = 3)+
+  scale_fill_manual(values = colors3, labels = c("Mono","Di",'Mix',"Tri"), 
+                    name = "Interaction model")
 }
 ggarrange(plots[[1]],plots[[2]],plots[[3]],plots[[4]], nrow = 2, ncol = 2, common.legend = T, legend = "bottom")
 
@@ -92,15 +94,18 @@ ggarrange(plots[[1]],plots[[2]],plots[[3]],plots[[4]], nrow = 2, ncol = 2, commo
 source("BRCA/loadBRCA214models.R")
 
 resMono = resFactors[[1]]
-resMix = resFactors[[13]]
-resDi = resFactors[[36]]
-resTri = resFactors[[45]]
+resMix = resFactors[[8]]
+resDi = resFactors[[11]]
+resTri = resFactors[[15]]
 
+resTri$signatures = resTri$signatures[c(4,2,3,1),]
 mMono = cosMatch(resTri$signatures, resMono$signatures)$match
 mMix = cosMatch(resTri$signatures, resMix$signatures)$match
 mDi = cosMatch(resTri$signatures, resDi$signatures)$match
+mTri = cosMatch(resTri$signatures, resTri$signatures)$match
 
-
+noSig = 4
+#sum(resMix$exposures == 0)
 ###################################################################################################
 ## plot signatures
 
@@ -113,19 +118,19 @@ sub = factor(rep(c("C > A","C > G","C > T","T > A","T > C","T > G"), each = 16))
 # mono
 dat = data.frame(m = factor(colnames(V), levels=unique(colnames(V))), sub, S =  t(resMono$signatures[mMono,]))
 dat$type = "mono"
-datmono = reshape(dat, varying = paste0("S.",c(1:8)), direction = "long", v.names = "true", timevar = "Signature")
+datmono = reshape(dat, varying = paste0("S.",c(1:noSig)), direction = "long", v.names = "true", timevar = "Signature")
 # mix
 dat = data.frame(m = factor(colnames(V), levels=unique(colnames(V))), sub, S =  t(resMix$signatures[mMix,]))
 dat$type = "mix"
-datmix = reshape(dat, varying = paste0("S.",c(1:8)), direction = "long", v.names = "true", timevar = "Signature")
+datmix = reshape(dat, varying = paste0("S.",c(1:noSig)), direction = "long", v.names = "true", timevar = "Signature")
 # di
 dat = data.frame(m = factor(colnames(V), levels=unique(colnames(V))), sub, S =  t(resDi$signatures[mDi,]))
 dat$type = "di"
-datdi = reshape(dat, varying = paste0("S.",c(1:8)), direction = "long", v.names = "true", timevar = "Signature")
+datdi = reshape(dat, varying = paste0("S.",c(1:noSig)), direction = "long", v.names = "true", timevar = "Signature")
 # tri
-dat = data.frame(m = factor(colnames(V), levels=unique(colnames(V))), sub, S =  t(resTri$signatures))
+dat = data.frame(m = factor(colnames(V), levels=unique(colnames(V))), sub, S =  t(resTri$signatures[mTri,]))
 dat$type = "tri"
-dattri = reshape(dat, varying = paste0("S.",c(1:8)), direction = "long", v.names = "true", timevar = "Signature")
+dattri = reshape(dat, varying = paste0("S.",c(1:noSig)), direction = "long", v.names = "true", timevar = "Signature")
 
 datall = rbind(datmono,datdi,datmix,dattri)
 
@@ -134,30 +139,96 @@ col.sub = c("#800080", "#FF9912", "#436EEE", "#ffdf12", "#27408B", "#E066FF")
 
 
 datall$comb = paste0(datall$time,datall$sub)
-datall$type = factor(datall$type, levels = c("mono","mix","di","tri"))
-
+datall$type = factor(datall$type, levels = c("mono","di","mix","tri"))
+colors3 = c("#AC0136","#FF9912", "#436EEE", "#27408B")
 plots = list()
-for(sig in 1:8){
+for(sig in 1:4){
   plots[[sig]] = ggplot(datall[datall$Signature == sig, ], aes(x = m, y = true, fill = type))+
     geom_bar(stat = "identity", width = 0.5)+
-    facet_grid(rows = vars(type), cols = vars(sub), scale = "free", switch = "x")+
+    facet_grid(rows = vars(type), cols = vars(sub), scale = "free_x", switch = "x",labeller = labeller(time = time.labs))+
+    #theme_bw()+
     theme(text = element_text(size=8, face = "bold"), 
           axis.text.x=element_blank(),
           strip.text = element_blank(),
-          axis.ticks = element_blank(), 
+          axis.ticks.x = element_blank(), 
           #legend.position = "none", 
           #strip.text.y.right = element_text(angle = -90, size = 8),
           strip.background.x = element_rect(color="black", fill="white",linetype="blank"),
-          strip.text.x = element_text(size = 7), 
-          panel.spacing.x = unit(0,"line"))+ 
+          strip.text.x = element_text(size = 9), panel.spacing.x = unit(0.2,"line"))+ 
     ylab("")+xlab("")+
     ggtitle(paste("Signature",sig))+
-    scale_y_continuous(labels = scales::percent_format(accuracy = 1))+
-    scale_fill_manual(values = colors3)
+    scale_y_continuous(labels = scales::percent_format(accuracy = 1), n.breaks = 3)+
+    scale_fill_manual(values = colors3, labels = c("Mono","Di",'Mix',"Tri"), 
+                      name = "Interaction model")
 }
-ggarrange(plots[[1]],plots[[2]],plots[[3]],plots[[4]],
-          plots[[5]],plots[[6]],plots[[7]],plots[[8]],
-          nrow = 2, ncol = 4, common.legend = T, legend = "bottom")
+ggarrange(plots[[1]],plots[[2]],plots[[3]],plots[[4]], nrow = 2, ncol = 2, common.legend = T, legend = "bottom")
+
+
+######################################################
+## UCUT 
+#####################################################
+
+library(ggplot2)
+library(ggpubr)
+source("UCUT/loadUCUTmodels.R")
+
+resMono = resFactors[[1]]
+resDi = resFactors[[19]]
+resPenta = resFactors[[21]]
+
+mMono = cosMatch(resPenta$signatures, resMono$signatures)$match
+mDi = cosMatch(resPenta$signatures, resDi$signatures)$match
+
+noSig = 2
+
+###################################################################################################
+## plot signatures
+
+sub = factor(rep(c("C > A","C > G","C > T","T > A","T > C","T > G"), each = 256))
+
+# mono
+dat = data.frame(m = factor(colnames(V), levels=unique(colnames(V))), sub, S =  t(resMono$signatures[mMono,]))
+dat$type = "mono"
+datmono = reshape(dat, varying = paste0("S.",c(1:noSig)), direction = "long", v.names = "true", timevar = "Signature")
+# di
+dat = data.frame(m = factor(colnames(V), levels=unique(colnames(V))), sub, S =  t(resDi$signatures[mDi,]))
+dat$type = "di"
+datdi = reshape(dat, varying = paste0("S.",c(1:noSig)), direction = "long", v.names = "true", timevar = "Signature")
+# penta
+dat = data.frame(m = factor(colnames(V), levels=unique(colnames(V))), sub, S =  t(resPenta$signatures))
+dat$type = "penta"
+datpenta = reshape(dat, varying = paste0("S.",c(1:noSig)), direction = "long", v.names = "true", timevar = "Signature")
+
+datall = rbind(datmono,datdi,datpenta)
+
+
+col.sub = c("#800080", "#FF9912", "#436EEE", "#ffdf12", "#27408B", "#E066FF")
+
+
+datall$comb = paste0(datall$time,datall$sub)
+datall$type = factor(datall$type, levels = c("mono","di","penta"))
+colors3 = c("#AC0136","#FF9912", "#436EEE")
+plots = list()
+for(sig in 1:noSig){
+  plots[[sig]] = ggplot(datall[datall$Signature == sig, ], aes(x = m, y = true, fill = type))+
+    geom_bar(stat = "identity", width = 0.5)+
+    facet_grid(rows = vars(type), cols = vars(sub), scale = "free_x", switch = "x")+
+    #theme_bw()+
+    theme(text = element_text(size=8, face = "bold"), 
+          axis.text.x=element_blank(),
+          strip.text = element_blank(),
+          axis.ticks.x = element_blank(), 
+          #legend.position = "none", 
+          #strip.text.y.right = element_text(angle = -90, size = 8),
+          strip.background.x = element_rect(color="black", fill="white",linetype="blank"),
+          strip.text.x = element_text(size = 9), panel.spacing.x = unit(0.2,"line"))+ 
+    ylab("")+xlab("")+
+    ggtitle(paste("Signature",sig))+
+    scale_y_continuous(labels = scales::percent_format(accuracy = 1), n.breaks = 3)+
+    scale_fill_manual(values = colors3, labels = c("Mono","Di","Penta"), 
+                      name = "Interaction model")
+}
+ggarrange(plots[[1]],plots[[2]], ncol = 2, common.legend = T, legend = "bottom")
 
 
 

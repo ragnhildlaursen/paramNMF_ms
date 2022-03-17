@@ -10,21 +10,19 @@ library(gtools)
 setwd("~/projects/paramNMF_ms/")
 source("BRCA/loadBRCA214models.R")
 
-# #V = t(V)
-# nmfprm(V, rep(list(Mfull),8),8, initial = 50, maxiter = 10)$gkl
-# # find optimal number of signatures
-# sig = c(4:9)
-# idx = 1
-# gkl = c()
-# for(i in sig){
-#   gkl[idx] = nmfprm(V, rep(list(Mfull),i),i, initial = 20, maxiter = 10000)$gkl
-#   idx = idx + 1
-# }
-# nmfprm(V, rep(list(Mmono),8),8, initial = 20, maxiter = 5000)$gkl
-# BIC = 2*gkl + log(nrow(V)*ncol(V))*(nrow(V) + ncol(V))*sig
-# plot(sig,BIC)
-# which.min(BIC)
+# find optimal number of signatures
+sig = c(2:7)
+idx = 1
+gkl = c()
+for(i in sig){
+  gkl[idx] = nmfprm(V, rep(list(Mfull),i),i, initial = 20, maxiter = 10000)$gkl
+  idx = idx + 1
+}
 
+BIC = 2*gkl + log(nrow(V)*ncol(V))*(nrow(V) + ncol(V))*sig
+plot(sig,BIC)
+which.min(BIC)
+nmfprm(V, rep(list(Mdi),4),4, initial = 20, maxiter = 5000)$gkl
 ## List of 15 models for the 3 parametrizations with X signatures
 noSignatures = 8 
 range(V)

@@ -2,3 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+.Rproj
+BRCA/result/notUseResults/
+BRCA/result/scripts/

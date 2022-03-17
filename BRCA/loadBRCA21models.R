@@ -1,7 +1,12 @@
 #######################################
 ## Load BRCA21 results and models
 ######################################
-source("~/projects/paramNMF_ms/GitModelSelection.R")
+setwd("~/projects/paramNMF_ms/")
+
+source("GitModelSelection.R")
+library(Rcpp)
+library(RcppArmadillo)
+sourceCpp("fastercode/NMF2.cpp")
 
 # load BRCA data 
 load("BRCA/BRCA21.RData")
@@ -19,11 +24,9 @@ R = factor(substr(colnames(V), start = 7, stop = 7))
 ##--------------------------------------------------------
 ## Model matrices
 Mfull = model.matrix(~L*M*R)      # full model
-Mdi = model.matrix(~L*M + M*R)    # di-nucleotide model
+Mdi = model.matrix(~L*M + M*R)# di-nucleotide model
 Mmono = model.matrix(~L + M + R)  # multiplicative model
 
-load("BRCA/result/BRCAmodelFactors.RData")
-MonoRes = resFactors[[1]]
-MixRes = resFactors[[9]]
-DiRes = resFactors[[11]]
-TriRes = resFactors[[15]]
+load("BRCA/result/BRCA21modelFactors4sig500initv2.RData")
+load("BRCA/result/BRCA21modelsummary4sig500initv2.RData")
+

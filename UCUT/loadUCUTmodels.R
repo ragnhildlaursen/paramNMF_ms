@@ -1,25 +1,29 @@
 #######################################
 ## Load BRCA results and models
 ######################################
-source("~/projects/paramNMF_ms/GitModelSelection.R")
+library(Rcpp)
+library(RcppArmadillo)
+setwd("~/projects/paramNMF_ms/")
+source("GitModelSelection.R")
+sourceCpp("fastercode/NMF2.cpp")
 
 ## Load UCUT data
 load("UCUT/UCUT_5_all.RData")
 
-V5 = t(Vall)   # data (No. patients) x (No. Mutation types)
+V = t(Vall)   # data (No. patients) x (No. Mutation types)
 ## UCUT has 1536 mutation types and 26 patients 
-V5[V5 == 0] = .Machine$double.eps # Zero entries replaced with small epsilon to avoid division by zero in EM-algorithm
+V[V == 0] = .Machine$double.eps # Zero entries replaced with small epsilon to avoid division by zero in EM-algorithm
 ##--------------------------------------------------------
 ## Factors
 ##--------------------------------------------------------
 ## First and second left flanking nucleotide 
-l1 = factor(substr(colnames(V5), start = 1, stop = 1))
-l2 = factor(substr(colnames(V5), start = 9, stop = 9))
+l1 = factor(substr(colnames(V), start = 1, stop = 1))
+l2 = factor(substr(colnames(V), start = 9, stop = 9))
 ## Actual point mutation
-m = factor(substr(colnames(V5), start = 3,stop = 5))
+m = factor(substr(colnames(V), start = 3,stop = 5))
 ## First and second right flanking nucleotide 
-r1 = factor(substr(colnames(V5), start = 7, stop = 7))
-r2 = factor(substr(colnames(V5), start = 11, stop = 11))
+r1 = factor(substr(colnames(V), start = 7, stop = 7))
+r2 = factor(substr(colnames(V), start = 11, stop = 11))
 
 ##--------------------------------------------------------
 ## Parametrizations of a signature
@@ -41,3 +45,8 @@ MList <- list(list(Mmono,Mmono),
               list(Mnghbr,Mnghbr),list(Mmono,Mnghbr),list(Mdi,Mnghbr),list(Mblend,Mnghbr),
               list(Mcombi,Mnghbr),list(Mtri,Mnghbr))
 nModels <- length(MList)
+
+
+load("UCUT/UCUTmodelFactors.RData")
+load("UCUT/UCUTmodelsummary.RData")
+
