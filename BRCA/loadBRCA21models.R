@@ -3,10 +3,10 @@
 ######################################
 setwd("~/projects/paramNMF_ms/")
 
-source("GitModelSelection.R")
+source("ModelSelection.R")
 library(Rcpp)
 library(RcppArmadillo)
-sourceCpp("fastercode/NMF2.cpp")
+sourceCpp("NMF2.cpp")
 
 # load BRCA data 
 load("BRCA/BRCA21.RData")
@@ -24,7 +24,7 @@ R = factor(substr(colnames(V), start = 7, stop = 7))
 ##--------------------------------------------------------
 ## Model matrices
 Mfull = model.matrix(~L*M*R)      # full model
-Mdi = model.matrix(~L*M + M*R)# di-nucleotide model
+Mdi = model.matrix(~L*M + M*R)    # di-nucleotide model
 Mmono = model.matrix(~L + M + R)  # multiplicative model
 
 load("BRCA/result/BRCA21modelFactors4sig500initv2.RData")

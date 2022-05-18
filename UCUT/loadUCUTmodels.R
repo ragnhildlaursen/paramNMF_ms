@@ -4,8 +4,8 @@
 library(Rcpp)
 library(RcppArmadillo)
 setwd("~/projects/paramNMF_ms/")
-source("GitModelSelection.R")
-sourceCpp("fastercode/NMF2.cpp")
+source("ModelSelection.R")
+sourceCpp("NMF2.cpp")
 
 ## Load UCUT data
 load("UCUT/UCUT_5_all.RData")
@@ -35,6 +35,7 @@ Mcombi = model.matrix(~0+l2+l1*m*r1+r2)         # Combined mono-tri-nucleotide m
 Mtri =  model.matrix(~0+l1*m*r1)                # Tri-nucleotide model (only one flanking nucleotide)
 Mnghbr = model.matrix(~0+l2*l1+l1*m+m*r1+r1*r2) # Di-nucleotide interaction with neighbour
 Mfull = model.matrix(~0+l2*l1*m*r1*r2)          # Full parametrized model
+
 ## List of the 21 models
 MList <- list(list(Mmono,Mmono),
               list(Mdi,Mdi),list(Mmono,Mdi),
@@ -47,6 +48,6 @@ MList <- list(list(Mmono,Mmono),
 nModels <- length(MList)
 
 
-load("UCUT/UCUTmodelFactors.RData")
-load("UCUT/UCUTmodelsummary.RData")
+load("UCUT/result/UCUTmodelFactors.RData")
+load("UCUT/result/UCUTmodelsummary.RData")
 

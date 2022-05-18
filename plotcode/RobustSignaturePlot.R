@@ -9,32 +9,33 @@ library(ggpubr)
 ##################
 ## cosine similarity 
 load("BRCA/result/SimilarityBRCA214w4sig500iparamboot50.RData")
-load("UCUT/SimilaritySignaturesUCUTparamboot.RData")
+load("BRCA/result/SimilarityBRCA214w4sig500iparamboot50Mix.RData")
+#load("UCUT/SimilaritySignaturesUCUTparamboot.RData")
 order21 = c(1,4,3,2)
 order214 = c(4,2,3,1)
-order = c(1,2)
+order = order214
 noSig = nrow(ResCosineMatMono)
 # Transforming data
-datPenta = data.frame(s = t(ResCosineMatPenta[order,]), type = "Penta")
-#datTri = data.frame(s = t(ResCosineMatTri[order,]), type = "Tri")
+#datPenta = data.frame(s = t(ResCosineMatPenta[order,]), type = "Penta")
+datTri = data.frame(s = t(ResCosineMatTri[order,]), type = "Tri")
 #m = cosMatch(TriRes$Signatures, MixRes$Signatures)$match
-#datMix = data.frame(s = t(ResCosineMatMix[order,]), type = "Mix")
+datMix = data.frame(s = t(ResCosineMatMix[order,]), type = "Mix")
 #m = cosMatch(TriRes$Signatures, DiRes$Signatures)$match
 datDi = data.frame(s = t(ResCosineMatDi[order,]), type = "Di")
 #m = cosMatch(TriRes$Signatures, MonoRes$Signatures)$match
 datMono = data.frame(s = t(ResCosineMatMono[order,]), type = "Mono")
-#dat1 = rbind(datTri,datDi,datMix,datMono)
-dat1 = rbind(datPenta,datDi,datMono)
+dat1 = rbind(datTri,datDi,datMix,datMono)
+#dat1 = rbind(datPenta,datDi,datMono)
 dat2 = reshape(dat1, varying = colnames(dat1)[1:noSig], direction = "long")
-#dat2$type = factor(dat2$type, levels = c("Mono","Di","Mix","Tri"))
-dat2$type = factor(dat2$type, levels = c("Mono","Di","Penta"))
+dat2$type = factor(dat2$type, levels = c("Mono","Di","Mix","Tri"))
+#dat2$type = factor(dat2$type, levels = c("Mono","Di","Penta"))
 ##------------------------------------------------------------------
 ## Compare true signatures and estimated signatures
 ##------------------------------------------------------------------
 colors3 = c("#AC0136", "#FF9912","#A895CD", "#27408B")
 colors3 = c("#AC0136","#FF9912", "#436EEE", "#27408B")
 
-colors3 = brewer.pal(n = 6, name = "Dark2")[c(1,3,6)]
+#colors3 = brewer.pal(n = 6, name = "Dark2")[c(1,3,6)]
 
 # plot in one plot
 sig.labs <- paste("Signature",1:noSig)

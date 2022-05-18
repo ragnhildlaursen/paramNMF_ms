@@ -14,7 +14,7 @@ mMono = cosMatch(PentaRes$signatures, MonoRes$signatures)$match
 mDi = cosMatch(PentaRes$signatures, DiRes$signatures)$match
 
 ##-----------------------------------------------------------------------
-## Sample a number of mutations from each patient (downsampling)
+## Reestimating signatures and exposures
 ##-----------------------------------------------------------------------
 sampleV <- V
 nG <- dim(V)[1]     # Number of patients (genomes)

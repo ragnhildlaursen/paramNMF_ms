@@ -13,16 +13,17 @@ mMono = cosMatch(PentaRes$signatures, MonoRes$signatures)$match
 mDi = cosMatch(PentaRes$signatures, DiRes$signatures)$match
 
 ##-----------------------------------------------------------------------
-## Sample a number of mutations from each patient (downsampling)
+## Reestimating exposures after downsamling the counts
 ##-----------------------------------------------------------------------
 sampleV <- V
-nG <- dim(V)[1]     # Number of patients (genomes)
-noSig = 2
-nMtTps <- dim(V)[2] # Number of mutation types
-nMt <- rowSums(V)
-dwn <- c(0.01,0.02,0.05)  # Down sampling 100, 20, 10
-nSim <- 50  # 5 if small study. 100 if intermediate. 200 if large.
-tol = 1e-2
+nG <- dim(V)[1]                 # Number of patients (genomes)
+noSig = nrow(DiRes$signatures)  # Number of signatures                
+nMtTps <- dim(V)[2]             # Number of mutation types
+nMt <- rowSums(V)               # Total number of mutations for each patients
+dwn <- c(0.01,0.02,0.05)        # Down sampling percentages
+nSim <- 50                      # Number of simulations
+tol = 1e-2                      # tolerance for stopping
+
 
 for(d in 1:length(dwn)){
 ResCosineMatPenta <- matrix(0,nrow=noSig,ncol=nSim) 
@@ -31,6 +32,8 @@ ResCosineMatMono <- matrix(0,nrow=noSig,ncol=nSim)
 
 for(nsim in 1:nSim){
   cat(nsim,"out of",nSim,"\n")
+  
+  # downsampling
   nSimMt <- round(rowSums(V)*dwn[d])
   for (i in 1:nG){
     set.seed(NULL)
@@ -38,6 +41,7 @@ for(nsim in 1:nSim){
     sampleV[i,] <- tabulate(sim,nbins=nMtTps)
   }
   
+  # reestimating exposures
   ResultFixPenta <- NMFglmSQR(Data = sampleV, NoSignatures = noSig, Signatures = PentaRes$signatures,tol=tol)
   ResultFixDi <- NMFglmSQR(Data = sampleV, NoSignatures = noSig, Signatures = DiRes$signatures,tol=tol)
   ResultFixMono <- NMFglmSQR(Data = sampleV, NoSignatures = noSig, Signatures = MonoRes$signatures,tol=tol)

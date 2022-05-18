@@ -13,6 +13,8 @@ resMat <- matrix(0,nrow=nModels,ncol=4)
 colnames(resMat) <- c("nprm1","nprm2","nprmtot","GKL")
 resFactors = list()
 
+init = 500
+smallIter = 500
 low.tolerance <- 1e-8
 
 for(m in 1:nModels){
@@ -24,7 +26,7 @@ for(m in 1:nModels){
   
   cat("Model:",m,"out of",nModels,"\n")
   res = nmfprm(data=V,noSignatures=2,designMatrices=MList[[m]],
-         tolerance=low.tolerance, initial = 500, maxiter = 10000, smallIter = 500)
+         tolerance=low.tolerance, initial = init, maxiter = 10000, smallIter = smallIter)
   
   resFactors[[m]] = res
 
