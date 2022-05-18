@@ -1,4 +1,5 @@
 rm(list=ls())
+setwd("~/projects/paramNMF_ms")
 ###################################
 ## Plotting signatures
 ###################################
@@ -70,7 +71,7 @@ for(sig in 1:4){
 plots[[sig]] = ggplot(datall[datall$Signature == sig, ], aes(x = m, y = true, fill = type))+
   geom_bar(stat = "identity", width = 0.5)+
   facet_grid(rows = vars(type), cols = vars(sub), scale = "free_x", switch = "x",labeller = labeller(time = time.labs))+
-  #theme_bw()+
+  theme_bw()+
   theme(text = element_text(size=8, face = "bold"), 
         axis.text.x=element_blank(),
         strip.text = element_blank(),
@@ -78,7 +79,9 @@ plots[[sig]] = ggplot(datall[datall$Signature == sig, ], aes(x = m, y = true, fi
         #legend.position = "none", 
         #strip.text.y.right = element_text(angle = -90, size = 8),
         strip.background.x = element_rect(color="black", fill="white",linetype="blank"),
-        strip.text.x = element_text(size = 9), panel.spacing.x = unit(0.2,"line"))+ 
+        strip.text.x = element_text(size = 8), 
+        panel.spacing.x = unit(0.2,"line"),
+        panel.border = element_blank())+ 
   ylab("")+xlab("")+
   ggtitle(paste("Signature",sig))+
   scale_y_continuous(labels = scales::percent_format(accuracy = 1), n.breaks = 3)+
@@ -95,7 +98,7 @@ source("BRCA/loadBRCA214models.R")
 
 resMono = resFactors[[1]]
 resMix = resFactors[[8]]
-resDi = resFactors[[11]]
+resDi = resFactors[[13]]
 resTri = resFactors[[15]]
 
 resTri$signatures = resTri$signatures[c(4,2,3,1),]
@@ -146,11 +149,12 @@ for(sig in 1:4){
   plots[[sig]] = ggplot(datall[datall$Signature == sig, ], aes(x = m, y = true, fill = type))+
     geom_bar(stat = "identity", width = 0.5)+
     facet_grid(rows = vars(type), cols = vars(sub), scale = "free_x", switch = "x",labeller = labeller(time = time.labs))+
-    #theme_bw()+
+    theme_bw()+
     theme(text = element_text(size=8, face = "bold"), 
           axis.text.x=element_blank(),
           strip.text = element_blank(),
-          axis.ticks.x = element_blank(), 
+          axis.ticks.x = element_blank(),
+          panel.border = element_blank(),
           #legend.position = "none", 
           #strip.text.y.right = element_text(angle = -90, size = 8),
           strip.background.x = element_rect(color="black", fill="white",linetype="blank"),
@@ -163,22 +167,47 @@ for(sig in 1:4){
 }
 ggarrange(plots[[1]],plots[[2]],plots[[3]],plots[[4]], nrow = 2, ncol = 2, common.legend = T, legend = "bottom")
 
-
+# line plot
+ggplot(datall, aes(x = m, y = true, color = type))+
+  #geom_point(size = 0)+
+  geom_line(aes(x = id, y = true))+
+  facet_grid(rows = vars(Signature), cols = vars(sub), scale = "free", switch = "x")+
+  #facet_grid(rows = vars(Signature), scale = "free")+
+  #theme_bw()+
+  theme(text = element_text(size=8, face = "bold"), 
+        #axis.text.x=element_blank(),
+        #axis.text.x=element_text(angle = 90, vjust = 0.4),
+        strip.text = element_blank()
+        axis.ticks.x = element_blank(), 
+        #legend.position = "none", 
+        strip.text.y.right = element_text(angle = -90, size = 8),
+        strip.background.x = element_rect(color="black", fill="white",linetype="blank"),
+        strip.text.x = element_text(size = 9), 
+        panel.spacing.x = unit(0.2,"line")
+        )+ 
+  ylab("")+xlab("")+
+  #ggtitle(paste("Signature",sig))+
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1), n.breaks = 3)+
+  scale_color_manual(values = colors3, labels = c("Mono","Di",'Mix',"Tri"), 
+                    name = "Interaction model")
+  scale_x_discrete(breaks=as.character(c(1:96)))
 ######################################################
 ## UCUT 
 #####################################################
-
+  
+library(RColorBrewer)
 library(ggplot2)
 library(ggpubr)
 source("UCUT/loadUCUTmodels.R")
 
 resMono = resFactors[[1]]
+resMix = resFactors[[5]]
 resDi = resFactors[[19]]
 resPenta = resFactors[[21]]
 
 mMono = cosMatch(resPenta$signatures, resMono$signatures)$match
 mDi = cosMatch(resPenta$signatures, resDi$signatures)$match
-
+mMix = cosMatch(resPenta$signatures, resMix$signatures)$match
 noSig = 2
 
 ###################################################################################################
@@ -198,6 +227,11 @@ datdi = reshape(dat, varying = paste0("S.",c(1:noSig)), direction = "long", v.na
 dat = data.frame(m = factor(colnames(V), levels=unique(colnames(V))), sub, S =  t(resPenta$signatures))
 dat$type = "penta"
 datpenta = reshape(dat, varying = paste0("S.",c(1:noSig)), direction = "long", v.names = "true", timevar = "Signature")
+# mix 
+dat = data.frame(m = factor(colnames(V), levels=unique(colnames(V))), sub, S =  t(resMix$signatures[mMix,]))
+dat$type = "mix"
+datmix = reshape(dat, varying = paste0("S.",c(1:noSig)), direction = "long", v.names = "true", timevar = "Signature")
+
 
 datall = rbind(datmono,datdi,datpenta)
 
@@ -207,7 +241,8 @@ col.sub = c("#800080", "#FF9912", "#436EEE", "#ffdf12", "#27408B", "#E066FF")
 
 datall$comb = paste0(datall$time,datall$sub)
 datall$type = factor(datall$type, levels = c("mono","di","penta"))
-colors3 = c("#AC0136","#FF9912", "#436EEE")
+colors3 = brewer.pal(n = 6, name = "Dark2")[c(1,3,6)]
+
 plots = list()
 for(sig in 1:noSig){
   plots[[sig]] = ggplot(datall[datall$Signature == sig, ], aes(x = m, y = true, fill = type))+
@@ -223,13 +258,14 @@ for(sig in 1:noSig){
           strip.background.x = element_rect(color="black", fill="white",linetype="blank"),
           strip.text.x = element_text(size = 9), panel.spacing.x = unit(0.2,"line"))+ 
     ylab("")+xlab("")+
+    ylim(0,0.03)+
     ggtitle(paste("Signature",sig))+
     scale_y_continuous(labels = scales::percent_format(accuracy = 1), n.breaks = 3)+
     scale_fill_manual(values = colors3, labels = c("Mono","Di","Penta"), 
                       name = "Interaction model")
 }
-ggarrange(plots[[1]],plots[[2]], ncol = 2, common.legend = T, legend = "bottom")
-
+ggarrange(plots[[1]],plots[[2]], ncol = 1, common.legend = T, legend = "bottom")
+sum(datall == NaN)
 
 
 

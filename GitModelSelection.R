@@ -74,7 +74,7 @@ glm.update = function(y,X, maxiter = 25, epsilon = 1e-8){
 #'
 NMFglmSQR = function(Data, NoSignatures = length(DesignMatrix), 
                      DesignMatrix = rep(list(diag(ncol(Data))),NoSignatures), 
-                     tolerance = 1e-2, maxIter = 5000, initial = 100, Exposures = NULL, Signatures = NULL){
+                     tolerance = 1e-2, maxIter = 10000, initial = 50, Exposures = NULL, Signatures = NULL){
   
   if(!is.list(DesignMatrix)) stop("DesignMatrix needs to be a list of matrices.")
   if(NoSignatures != length(DesignMatrix)) stop("NoSignatures different from number of specified matrices in DesignMatrix.")
