@@ -5,4 +5,7 @@
 .Rproj
 BRCA/result/notUseResults/
 BRCA/result/scripts/
+plot/allplots/
+plot/BRCA/
+plot/snippets/
 plot/texfile/
