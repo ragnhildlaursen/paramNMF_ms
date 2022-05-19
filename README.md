@@ -14,8 +14,8 @@ The coding files do the folowing:
  - \texttt{loadBRCA21models.R} - loads the BRCA21 dataset and creates the factors and model matrices for the parametrization of the signatures.
  - \texttt{loadBRCA214models.R} - loads the BRCA214 dataset and creates the factors and model matrices for the parametrization of the signatures.
  - \texttt{optimalSignaturesBRCA.R} - recovers the fit and estimates of $W$ and $H$ for each of the parametrized models. 
- - \texttt{RobustExposures.R} - Find the cosine similarity between the orignal exposures and the reestimated ones from the downsampled data. 
- - \texttt{RobustSignatures.R} - Find the cosine similarity between the original signatures and the reestimed ones after applying parametric bootstrapping to the original results.
+ - \texttt{RobustExposures.R} - find the cosine similarity between the orignal exposures and the reestimated ones from the downsampled data. 
+ - \texttt{RobustSignatures.R} - find the cosine similarity between the original signatures and the reestimed ones after applying parametric bootstrapping to the original results.
 
 ## Analysis of UCUT datasets
 
