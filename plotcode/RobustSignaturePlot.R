@@ -9,8 +9,10 @@ library(ggpubr)
 ##################
 ## cosine similarity 
 load("BRCA/result/SimilarityBRCA214w4sig500iparamboot50.RData")
-load("BRCA/result/SimilarityBRCA214w4sig500iparamboot50Mix.RData")
-#load("UCUT/SimilaritySignaturesUCUTparamboot.RData")
+load("BRCA/result/SimilarityBRCA21w4sig500iparamboot50Mix.RData")
+load("UCUT/result/SimilaritySignaturesUCUTparamboot.RData")
+load("UCUT/result/SimilaritySignaturesUCUTmixmodel.RData")
+
 order21 = c(1,4,3,2)
 order214 = c(4,2,3,1)
 order = order214
@@ -25,17 +27,17 @@ datDi = data.frame(s = t(ResCosineMatDi[order,]), type = "Di")
 #m = cosMatch(TriRes$Signatures, MonoRes$Signatures)$match
 datMono = data.frame(s = t(ResCosineMatMono[order,]), type = "Mono")
 dat1 = rbind(datTri,datDi,datMix,datMono)
-#dat1 = rbind(datPenta,datDi,datMono)
+#dat1 = rbind(datPenta,datDi,datMix, datMono)
 dat2 = reshape(dat1, varying = colnames(dat1)[1:noSig], direction = "long")
 dat2$type = factor(dat2$type, levels = c("Mono","Di","Mix","Tri"))
-#dat2$type = factor(dat2$type, levels = c("Mono","Di","Penta"))
+#dat2$type = factor(dat2$type, levels = c("Mono","Di","Mix","Penta"))
 ##------------------------------------------------------------------
 ## Compare true signatures and estimated signatures
 ##------------------------------------------------------------------
 colors3 = c("#AC0136", "#FF9912","#A895CD", "#27408B")
 colors3 = c("#AC0136","#FF9912", "#436EEE", "#27408B")
 
-#colors3 = brewer.pal(n = 6, name = "Dark2")[c(1,3,6)]
+#colors3 = c(brewer.pal(n = 6, name = "Dark2")[c(1,3,6)],"#436EEE")[c(1,2,4,3)]
 
 # plot in one plot
 sig.labs <- paste("Signature",1:noSig)
@@ -46,7 +48,7 @@ ggplot(dat2, aes(x=type, y=s, fill=type, col = type)) +
   #geom_dotplot(binaxis='y', stackdir='center', dotsize=0.5) +
   #geom_jitter()+
   geom_boxplot()+
-  facet_wrap(time~., nrow = 1, scales = "free_y", labeller = labeller(time = sig.labs))+
+  facet_wrap(time~., nrow = 2, scales = "free_y", labeller = labeller(time = sig.labs))+
   scale_color_manual(values = colors3, labels = c("Mono","Di",'Mix',"Tri"), 
                      name = "Interaction model")+
   scale_fill_manual(values = colors3, labels = c("Mono","Di",'Mix',"Tri"), 

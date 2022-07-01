@@ -49,3 +49,7 @@ for (m in 1:nModels){
   resMat[m,"GKL"] <- res$gkl
   cat("Final result:","nprm:",nprm,", GKL:",res$gkl,"\n")
 }
+
+
+#######################################################################
+

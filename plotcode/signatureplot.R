@@ -6,9 +6,11 @@ setwd("~/projects/paramNMF_ms")
 library(ggplot2)
 library(ggpubr)
 library(RColorBrewer)
-source("~/projects/paramNMF_ms/GitModelSelection.R")
+source("~/projects/paramNMF_ms/ModelSelection.R")
 
-# BRCA21
+################################################################
+## BRCA21 signature plot
+################################################################ 
 source("BRCA/loadBRCA21models.R")
 resMono = resFactors[[1]]
 resMix = resFactors[[8]]
@@ -191,6 +193,36 @@ ggplot(datall, aes(x = m, y = true, color = type))+
   scale_color_manual(values = colors3, labels = c("Mono","Di",'Mix',"Tri"), 
                     name = "Interaction model")
   scale_x_discrete(breaks=as.character(c(1:96)))
+  
+  
+##### similarity to BRCA21 signatures
+source("BRCA/loadBRCA21models.R")
+resMono1 = resFactors[[1]]
+resMix1 = resFactors[[8]]
+resDi1 = resFactors[[11]]
+resTri1 = resFactors[[15]]
+resTri1$signatures = resTri1$signatures[c(1,4,3,2),]
+mMono1 = cosMatch(resTri1$signatures, resMono1$signatures)$match
+mMix1 = cosMatch(resTri1$signatures, resMix1$signatures)$match
+mDi1 = cosMatch(resTri1$signatures, resDi1$signatures)$match
+mTri1 = cosMatch(resTri1$signatures, resTri1$signatures)$match
+  
+  
+for(i in 1:4){
+  print(similarity(resMono$signatures[mMono[i],],resMono1$signatures[mMono1[i],]))
+}
+
+for(i in 1:4){
+  print(similarity(resDi$signatures[mDi[i],],resDi1$signatures[mDi1[i],]))
+}
+
+for(i in 1:4){
+  print(similarity(resMix$signatures[mMix[i],],resMix1$signatures[mMix1[i],]))
+}
+
+for(i in 1:4){
+  print(similarity(resTri$signatures[mTri[i],],resTri1$signatures[mTri1[i],]))
+}
 ######################################################
 ## UCUT 
 #####################################################
@@ -201,9 +233,12 @@ library(ggpubr)
 source("UCUT/loadUCUTmodels.R")
 
 resMono = resFactors[[1]]
-resMix = resFactors[[5]]
 resDi = resFactors[[19]]
 resPenta = resFactors[[21]]
+
+load("UCUT/result/UCUTditriMIXmodel.RData")
+
+resMix = resFactors[[5]]
 
 mMono = cosMatch(resPenta$signatures, resMono$signatures)$match
 mDi = cosMatch(resPenta$signatures, resDi$signatures)$match
@@ -233,15 +268,15 @@ dat$type = "mix"
 datmix = reshape(dat, varying = paste0("S.",c(1:noSig)), direction = "long", v.names = "true", timevar = "Signature")
 
 
-datall = rbind(datmono,datdi,datpenta)
+datall = rbind(datmono,datdi,datmix,datpenta)
 
 
 col.sub = c("#800080", "#FF9912", "#436EEE", "#ffdf12", "#27408B", "#E066FF")
 
 
 datall$comb = paste0(datall$time,datall$sub)
-datall$type = factor(datall$type, levels = c("mono","di","penta"))
-colors3 = brewer.pal(n = 6, name = "Dark2")[c(1,3,6)]
+datall$type = factor(datall$type, levels = c("mono","di","mix","penta"))
+colors3 = c(brewer.pal(n = 6, name = "Dark2")[c(1,3,6)],"#436EEE")[c(1,2,4,3)]
 
 plots = list()
 for(sig in 1:noSig){
@@ -258,10 +293,10 @@ for(sig in 1:noSig){
           strip.background.x = element_rect(color="black", fill="white",linetype="blank"),
           strip.text.x = element_text(size = 9), panel.spacing.x = unit(0.2,"line"))+ 
     ylab("")+xlab("")+
-    ylim(0,0.03)+
+    #ylim(0,0.03)+
     ggtitle(paste("Signature",sig))+
     scale_y_continuous(labels = scales::percent_format(accuracy = 1), n.breaks = 3)+
-    scale_fill_manual(values = colors3, labels = c("Mono","Di","Penta"), 
+    scale_fill_manual(values = colors3, labels = c("Mono","Di","Mix","Penta"), 
                       name = "Interaction model")
 }
 ggarrange(plots[[1]],plots[[2]], ncol = 1, common.legend = T, legend = "bottom")

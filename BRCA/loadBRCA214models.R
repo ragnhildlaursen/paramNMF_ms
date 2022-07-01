@@ -3,10 +3,10 @@
 ######################################
 setwd("~/projects/paramNMF_ms/")
 
-source("GitModelSelection.R")
+source("ModelSelection.R")
 library(Rcpp)
 library(RcppArmadillo)
-sourceCpp("fastercode/NMF2.cpp")
+sourceCpp("NMF2.cpp")
 
 # load BRCA data 
 load("BRCA/BRCA214.RData")

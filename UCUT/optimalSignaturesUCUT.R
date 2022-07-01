@@ -6,6 +6,14 @@
 setwd("~/projects/paramNMF_ms/")
 source("UCUT/loadUCUTmodels.R")
 
+noSignatures = 2
+models = list(Mmono,Mblend,Mcombi,Mtri,Mnghbr,Mfull)
+ModelCombinations = combinations(length(models), noSignatures, 
+                                 repeats.allowed = TRUE)
+nModels <- nrow(ModelCombinations)
+MList = lapply(1:nModels,function(x) lapply(ModelCombinations[x,], function(y) models[[y]]))
+cat("Number og models: ", nModels)
+
 ##-----------------------------------------------------------
 ## Matrix with summary of the results
 ##-----------------------------------------------------------
