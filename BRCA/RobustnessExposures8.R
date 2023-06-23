@@ -3,12 +3,14 @@ rm(list=ls())
 ## Robustness of exposures
 ################################################################
 setwd("~/projects/paramNMF_ms")
-source("BRCA/loadBRCA21models.R")
+
+source("BRCA/loadBRCA214models.R")
+load("C:/Users/au543194/Documents/projects/paramNMF_ms/BRCA/result/notUseResults/BRCA214sig8/BRCA214optimal8sig.RData")
 
 MonoRes = resFactors[[1]]
-MixRes = resFactors[[8]]
-DiRes = resFactors[[11]]
-TriRes = resFactors[[15]]
+DiRes = resFactors[[2]]
+TriRes = resFactors[[3]]
+MixRes = resFactors[[4]]
 
 mMono = cosMatch(TriRes$signatures, MonoRes$signatures)$match
 mMix = cosMatch(TriRes$signatures, MixRes$signatures)$match
@@ -44,16 +46,17 @@ for (nsim in 1:nSim){
     sampleV[i,] <- tabulate(sim,nbins=nMtTps)
   }
   # reestimating exposures
-  ResultFixTri <- NMFglmSQR(Data = sampleV, NoSignatures = noSig, Signatures = TriRes$Signatures,tol=tol)
-  ResultFixMix <- NMFglmSQR(Data = sampleV, NoSignatures = noSig, Signatures = MixRes$Signatures,tol=tol)
-  ResultFixDi <- NMFglmSQR(Data = sampleV, NoSignatures = noSig, Signatures = DiRes$Signatures,tol=tol)
-  ResultFixMono <- NMFglmSQR(Data = sampleV, NoSignatures = noSig, Signatures = MonoRes$Signatures,tol=tol)
+  ResultFixTri <- NMFglmSQR(Data = sampleV, NoSignatures = noSig, Signatures = TriRes$signatures,tol=tol)
+  ResultFixMix <- NMFglmSQR(Data = sampleV, NoSignatures = noSig, Signatures = MixRes$signatures,tol=tol)
+  ResultFixDi <- NMFglmSQR(Data = sampleV, NoSignatures = noSig, Signatures = DiRes$signatures,tol=tol)
+  ResultFixMono <- NMFglmSQR(Data = sampleV, NoSignatures = noSig, Signatures = MonoRes$signatures,tol=tol)
   
   ## Compare exposures: Cosine similarity for each patient
-  ResCosineMatTri[,nsim] = cosMatch(t(TriRes$Exposures),t(ResultFixTri$Exposures))$cossim
-  ResCosineMatDi[,nsim] = cosMatch(t(DiRes$Exposures[,mDi]),t(ResultFixDi$Exposures))$cossim
-  ResCosineMatMix[,nsim] = cosMatch(t(MixRes$Exposures[,mMix]),t(ResultFixMix$Exposures))$cossim
-  ResCosineMatMono[,nsim] = cosMatch(t(MonoRes$Exposures[,mMono]),t(ResultFixMono$Exposures))$cossim
+  ResCosineMatTri[,nsim] = cosMatch(t(TriRes$exposures),t(ResultFixTri$Exposures))$cossim
+  ResCosineMatDi[,nsim] = cosMatch(t(DiRes$exposures[,mDi]),t(ResultFixDi$Exposures))$cossim
+  ResCosineMatMix[,nsim] = cosMatch(t(MixRes$exposures[,mMix]),t(ResultFixMix$Exposures))$cossim
+  ResCosineMatMono[,nsim] = cosMatch(t(MonoRes$exposures[,mMono]),t(ResultFixMono$Exposures))$cossim
 }
-save(ResCosineMatTri,ResCosineMatDi,ResCosineMatMono, file = paste0("ExposureBRCAdwn",dwn[d]*100,".RData"))
+save(ResCosineMatTri,ResCosineMatDi,ResCosineMatMono, file = paste0("ExposureBRCA214dwn",dwn[d]*100,".RData"))
 }
+t(TriRes$exposures)

@@ -26,6 +26,3 @@ Mfull = model.matrix(~L*M*R)      # full model
 Mdi = model.matrix(~L*M + M*R)    # di-nucleotide model
 Mmono = model.matrix(~L + M + R)  # multiplicative model
 
-load("BRCA/result/BRCA214modelFactors4sig500init.RData")
-load("BRCA/result/BRCA214modelsummary4sig500init.RData")
-

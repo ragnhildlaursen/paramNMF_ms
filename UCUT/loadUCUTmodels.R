@@ -29,10 +29,10 @@ r2 = factor(substr(colnames(V), start = 11, stop = 11))
 ## Parametrizations of a signature
 ##--------------------------------------------------------
 Mmono = model.matrix(~0+l2+l1+m+r1+r2)          # Mono-nucleotide model
+Mtri =  model.matrix(~0+l1*m*r1)                # Tri-nucleotide model (only one flanking nucleotide)
 Mdi = model.matrix(~0+m*l2+l1*m+m*r1+m*r2)      # Di-nucleotide interaction with mutation
 Mblend = model.matrix(~0+l2+l1*m+m*r1+r2)       # Blended mono-di-nucleotide model
 Mcombi = model.matrix(~0+l2+l1*m*r1+r2)         # Combined mono-tri-nucleotide model
-Mtri =  model.matrix(~0+l1*m*r1)                # Tri-nucleotide model (only one flanking nucleotide)
 Mnghbr = model.matrix(~0+l2*l1+l1*m+m*r1+r1*r2) # Di-nucleotide interaction with neighbour
 Mfull = model.matrix(~0+l2*l1*m*r1*r2)          # Full parametrized model
 

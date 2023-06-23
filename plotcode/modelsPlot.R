@@ -13,12 +13,13 @@ setwd("~/projects/paramNMF_ms/")
 
 source("BRCA/loadBRCA214models.R")
 
-load("BRCA/result/BRCA214modelsummary4sig500init.RData")
+load("BRCA/result/BRCA214allmodels20init.RData")
 
+resMat = t(allmodels[[8]])
 
 #load("UCUT/UCUTmodelsummary.RData")
 
-noSig = 4
+noSig = 8
 # colors for signatures
 col.model = c("#AC0136", "#FF9912", "#27408B")
 
@@ -28,33 +29,34 @@ resMatnew[resMatnew == 42] = col.model[2]
 resMatnew[resMatnew == 96] = col.model[3]
 
 # parameter order
-prm_order = order(resMat[,"nprmtot"])
+prm_order = order(resMat[,10])
 
-gkl = resMat[,"GKL"]
+gkl = as.numeric(resMat[,11])
 
 noModels = nrow(resMat)
 
 
 diff = diff(range(gkl))/10
 ## ggplot
-dat1 = data.frame(idx = c(1:length(gkl)), gkl = gkl[prm_order], sigty = resMat[prm_order,c(1:noSig)])
+dat1 = data.frame(idx = c(1:length(gkl)), gkl = gkl[prm_order], sigty = resMat[prm_order,c(1:noSig)+1])
 dat2 = reshape(dat1, varying = colnames(dat1)[-c(1,2)], direction = "long")
 dat2$sigty = factor(dat2$sigty)
 
-dat2$bic = 2*dat2$gkl + log(nrow(V)*ncol(V))*(resMat[prm_order,"nprmtot"]) 
+dat2$bic = 2*dat2$gkl + log(sum(V > 0.5))*(as.numeric(resMat[prm_order,10]) + nrow(V)*noSig) 
 
 
 mC = (max(dat2$gkl) - min(dat2$gkl))/(max(dat2$bic) - min(dat2$bic))
 dat2$bic = dat2$bic* mC
 addC = min(dat2$gkl) - min(dat2$bic)
 dat2$bic = dat2$bic + addC
-datparam = data.frame(idx = c(1:nrow(resMat)), param = resMat[prm_order,"nprmtot"], y = max(gkl)+diff/1.2)
+datparam = data.frame(idx = c(1:nrow(resMat)), param = resMat[prm_order,10], y = max(gkl)+diff/1.2)
 p = ggplot(dat2, aes(x = idx, y = gkl))+
   #geom_vline(xintercept = 16, lty = "dashed")+
-  geom_point(size =3)+
+  geom_point(size =2)+
   geom_line()+
-  geom_point(aes(x = idx, y = max(gkl)+diff+diff/1.8*rep(c(1:noSig),each = noModels), col = dat2$sigty), shape = 15, size = 4)+
-  geom_text(datparam, mapping = aes(x = idx, y = y, label = param), size = 3.5)+
+  #geom_vline(xintercept = 26, color = "palegreen4")+
+  geom_point(aes(x = idx, y = max(gkl)+diff+diff/1.8*rep(c(noSig:1),each = noModels), col = dat2$sigty), shape = 15, size = 4)+
+  #geom_text(datparam, mapping = aes(x = idx, y = y, label = param), size = 2.5)+
   geom_point(aes(x = idx, y = bic), col = "palegreen4")+
   geom_line(aes(x = idx, y = bic), col = "palegreen4")+
   #geom_text(aes(x = idx, y = max(gkl)+diff/1.2, label = rep(resMat[prm_order,"nprmtot"],4)), size = 3.5)+
@@ -67,9 +69,9 @@ p = ggplot(dat2, aes(x = idx, y = gkl))+
         legend.title = element_text(face = "bold"),
         legend.background = element_blank()
         
-        )+
-  scale_color_manual(values = col.model, 
-                     labels = c(expression(L + M + R), expression(L%*%M + M%*%R), expression(L%*%M%*%R)), 
+  )+
+  scale_color_manual(values = col.model,
+                     labels = c(expression(L + M + R), expression(L%*%M + M%*%R), expression(L%*%M%*%R)),
                      name = "Signature factorization") +
   scale_y_continuous(
     
@@ -83,40 +85,103 @@ p = ggplot(dat2, aes(x = idx, y = gkl))+
     axis.title.y = element_text(color = "black", size=13),
     axis.title.y.right = element_text(color = "palegreen4", size=13)
   )+ 
-  scale_x_discrete(breaks = c(1:15))+
-  geom_point(aes(x = which.min(dat2$bic), y = dat2$bic[which.min(dat2$bic)]), color = "palegreen4", pch = 1, size = 6 )
+  scale_x_discrete(breaks = c(1:45))+
+  geom_point(aes(x = which.min(dat2$bic), y = dat2$bic[which.min(dat2$bic)]), color = "palegreen4", pch = 1, size = 6)
 p
 
-colors3 = c("#AC0136","#A895CD", "#FF9912", "#27408B")
 colors3 = c("#AC0136","#FF9912", "#436EEE", "#27408B")
 
-# BRCA21
-yval1 = 5050
-yval2 = 5770
-dattext = data.frame(xp = c(1,7,8,15), yp = 5880, type = c("Mono", "Di", "Mix","Tri"))
+# BRCA214 
+yval1 = 33800
+yval2 = 41250
+dattext = data.frame(xp = c(1,18,26,45), yp = 42000, type = c("Mono", "Di", "Mix","Tri"))
 
-p + geom_rect(aes(xmin = 0.78, xmax = 1.22, ymin = yval1, ymax = yval2), 
-                fill = "white", alpha = 0, color = colors3[1])+ 
-  geom_rect(aes(xmin = 6.78, xmax = 7.22, ymin = yval1, ymax = yval2), 
-                fill = "white", alpha = 0, color = colors3[2])+ 
-  geom_rect(aes(xmin = 7.78, xmax = 8.22, ymin = yval1, ymax = yval2), 
+p2 = p + geom_rect(aes(xmin = 0.6, xmax = 1.4, ymin = yval1, ymax = yval2), 
+                   fill = "white", alpha = 0, color = colors3[1])+ 
+  geom_rect(aes(xmin = 17.6, xmax = 18.4, ymin = yval1, ymax = yval2), 
+            fill = "white", alpha = 0, color = colors3[2])+ 
+  geom_rect(aes(xmin = 25.6, xmax = 26.4, ymin = yval1, ymax = yval2), 
             fill = "white", alpha = 0, color = colors3[3])+ 
-  geom_rect(aes(xmin = 14.78, xmax = 15.22, ymin = yval1, ymax = yval2), 
+  geom_rect(aes(xmin = 44.6, xmax = 45.4, ymin = yval1, ymax = yval2), 
             fill = "white", alpha = 0, color = colors3[4])+
-  geom_segment(aes(x = 6, y = 4400, xend = 6, yend = 4700),
-               arrow = arrow(length = unit(0.28, "cm")))+
-  geom_text(data = data.frame(x = 6, y = 4300), mapping = aes(x = x, y = y, label = "Total parameters"), fontface = "italic", col = "black")+
-geom_text(dattext,mapping = aes(x = xp, y = yp, label = type), size = 3.5, fontface = "plain")
+  # geom_segment(aes(x = 6, y = 71000, xend = 6, yend = 75000),
+  #              arrow = arrow(length = unit(0.28, "cm")))+
+  # geom_text(data = data.frame(x = 6, y = 70000), 
+  #           mapping = aes(x = x, y = y, label = "Total parameters"), 
+  #           fontface = "italic", col = "black")+
   
+  geom_text(dattext,mapping = aes(x = xp, y = yp, label = type), size = 3.5, fontface = "plain")
 
+p2
+
+# plot with number of instead of many of the same color 
+
+model = matrix(0, nrow = 45, ncol = 3)
+resMatnew = resMat[prm_order,]
+for(i in 1:45){
+  model[i,] = table(factor(resMatnew[i,2:9], levels = c(12,42,96)))
+}
+
+dat2$mono = rep(model[,1],8)
+dat2$di = rep(model[,2],8)
+dat2$full = rep(model[,3],8)
+
+dat2
+
+
+
+p = ggplot(dat2, aes(x = idx, y = gkl))+
+  #geom_vline(xintercept = 16, lty = "dashed")+
+  geom_point(size =3)+
+  geom_line()+
+  #geom_vline(xintercept = 26, color = "palegreen4")+
+  #geom_point(aes(x = idx, y = max(gkl)+diff+diff/1.8*rep(c(1:noSig),each = noModels), col = dat2$sigty), shape = 15, size = 4)+
+  #geom_text(datparam, mapping = aes(x = idx, y = y, label = param), size = 3.5)+
+  geom_label(aes(x = id, y = 35000, label = full), fill = "#27408B", col = "white", fontface = "bold",cex = 3)+
+  geom_label(aes(x = id, y = 36200, label = di), fill = "#FF9912", col = "white", fontface = "bold",cex = 3)+
+  geom_label(aes(x = id, y = 37400, label = mono), fill = "#AC0136", col = "white", fontface = "bold",cex = 3)+
+  geom_point(aes(x = idx, y = bic), col = "palegreen4")+
+  geom_line(aes(x = idx, y = bic), col = "palegreen4")+
+  #geom_text(aes(x = idx, y = max(gkl)+diff/1.2, label = rep(resMat[prm_order,"nprmtot"],4)), size = 3.5)+
+  xlab("Possible interaction models")+
+  ylab("Generalized Kullback-Leibler (GKL)")+
+  #ggtitle("Fit of data for all possible interaction models on BRCA21")+
+  theme_bw()+
+  theme(legend.position = c(0.75,0.53), 
+        legend.text.align = 0.5,
+        legend.title = element_text(face = "bold"),
+        legend.background = element_blank()
+        
+  )+
+  geom_text(aes(x = 0, y = 35000, label = "Mono"))+
+  scale_color_manual(values = col.model,
+                     labels = c(expression(L + M + R), expression(L%*%M + M%*%R), expression(L%*%M%*%R)),
+                     name = "Signature factorization") +
+  scale_y_continuous(
+    
+    # Features of the first axis
+    name = "Generalized Kullback-Leibler (GKL)",
+    
+    # Add a second axis and specify its features
+    sec.axis = sec_axis(~(.-addC)/mC, name="Bayesian Information Criteria (BIC)")
+  ) +
+  theme(
+    axis.title.y = element_text(color = "black", size=13),
+    axis.title.y.right = element_text(color = "palegreen4", size=13)
+  )+ 
+  geom_point(aes(x = which.min(dat2$bic), y = dat2$bic[which.min(dat2$bic)]), color = "palegreen4", pch = 1, size = 6 )
+
+p
+
+colors3 = c("#AC0136","#FF9912", "#436EEE", "#27408B")
 
 # BRCA214 
-yval1 = 79200
-yval2 = 89000
-dattext = data.frame(xp = c(1,7,12,15), yp = 91000, type = c("Mono", "Di", "Mix","Tri"))
+yval1 = 34200
+yval2 = 41000
+dattext = data.frame(xp = c(1,18,26,45), yp = 42000, type = c("Mono", "Di", "Mix","Tri"))
 
 p2 = p + geom_rect(aes(xmin = 0.78, xmax = 1.22, ymin = yval1, ymax = yval2), 
-              fill = "white", alpha = 0, color = colors3[1])+ 
+                   fill = "white", alpha = 0, color = colors3[1])+ 
   geom_rect(aes(xmin = 6.78, xmax = 7.22, ymin = yval1, ymax = yval2), 
             fill = "white", alpha = 0, color = colors3[2])+ 
   geom_rect(aes(xmin = 11.78, xmax = 12.22, ymin = yval1, ymax = yval2), 
@@ -133,15 +198,8 @@ p2 = p + geom_rect(aes(xmin = 0.78, xmax = 1.22, ymin = yval1, ymax = yval2),
 
 p2
 
-#### adding BIC values
-p2 + scale_y_continuous(
-  
-  # Features of the first axis
-  name = "Generalized Kullback Leibler",
-  
-  # Add a second axis and specify its features
-  sec.axis = sec_axis(~.+ 10000, name="BIC values")
-)
+
+
 ########## UCUT model plot ---------------------------------------------------------
 source("UCUT/loadUCUTmodels.R")
 load("UCUT/result/UCUTmodelsummary.RData")

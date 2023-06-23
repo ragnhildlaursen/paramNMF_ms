@@ -8,10 +8,7 @@ library(ggplot2)
 library(ggpubr)
 ##################
 ## cosine similarity 
-order21 = c(1,4,3,2)
-order214 = c(4,2,3,1)
-order = order214
-
+order = c(1:8)
 datalist = list()
 for(dwn in c(1,2,5)){
   load(paste0("BRCA/result/ExposureBRCA214dwn",dwn,".RData"))
@@ -24,7 +21,7 @@ for(dwn in c(1,2,5)){
   #m = cosMatch(TriRes$Signatures, MonoRes$Signatures)$match
   datMono = data.frame(s = t(ResCosineMatMono), type = "Mono")
   
-  dat1 = rbind(datTri,datMix,datDi,datMono)
+  dat1 = rbind(datTri,datDi,datMono,datMix)
   dat2 = reshape(dat1, varying = colnames(dat1)[1:nrow(ResCosineMatMono)], direction = "long")
   dat2$type = factor(dat2$type, levels = c("Mono","Di","Mix","Tri"))
   dat2$time = factor(dat2$time)
@@ -35,14 +32,16 @@ for(dwn in c(1,2,5)){
 
 datall = rbind(datalist[[1]],datalist[[2]],datalist[[5]])
 datall$downsample = factor(datall$downsample, levels = c(1,2,5), labels = c("1%","2%","5%"))
+
 ##------------------------------------------------------------------
 ## Compare true exposures and estimated exposures
 ##------------------------------------------------------------------
 #datall = datall[datall$type != "Mix",]
 colors3 = c("#AC0136","#FF9912", "#436EEE", "#27408B")
 
-ggplot(datall, aes(x=type, y=s, fill=type)) +
-  geom_violin(position=position_dodge(1), scale = "width") +
+ggplot(datall, aes(x=type, y=s, fill=type, color = type)) +
+  #geom_violin(position=position_dodge(1), scale = "width") +
+  geom_jitter()+
   facet_grid(rows = vars(time), cols = vars(downsample), scales = "free") +
   #geom_dotplot(binaxis='y', stackdir='center', dotsize=0.3) +
   ylab("Cosine similarity")+xlab("Interaction model")+
@@ -63,6 +62,29 @@ ggplot(datall, aes(x=type, y=s, fill=type, col = type)) +
                     name = "Interaction model")+
   scale_color_manual(values = colors3, labels = c("Mono","Di",'Mix',"Tri"), 
                     name = "Interaction model")
+
+
+# Average cosine similarity for each run
+library(reshape2)
+library(dplyr)
+
+datmean = datall %>% group_by(type,id,downsample) %>% summarise(smean = mean(s))
+
+ggplot(datmean, aes(x=type, y=smean, fill=type, col = type)) +
+  #geom_violin(position=position_dodge(1), scale = "width") +
+  geom_boxplot()+
+  facet_grid(cols = vars(downsample), scales = "free_y") +
+  theme_bw()+
+  theme(legend.position = "none",
+        strip.background = element_blank(),
+        text = element_text(size = 18))+
+  ggtitle("Downsamling the mutation counts")+
+  #geom_dotplot(binaxis='y', stackdir='center', dotsize=0.3) +
+  ylab("Cosine similarity")+xlab("Interaction model")+
+  scale_fill_manual(values = colors3, labels = c("Mono","Di",'Mix',"Tri"), 
+                    name = "Interaction model")+
+  scale_color_manual(values = colors3, labels = c("Mono","Di",'Mix',"Tri"), 
+                     name = "Interaction model")
 
 ## UCUT exposures --------------------------------------------
 datalist = list()
@@ -103,7 +125,7 @@ ggplot(datall, aes(x=type, y=s, fill=type)) +
 
 ggplot(datall, aes(x=type, y=s, fill=type, col = type)) +
   #geom_violin(position=position_dodge(1), scale = "width") +
-  geom_jitter()+
+  geom_boxplot()+
   facet_grid(cols = vars(downsample), scales = "free") +
   theme_bw()+
   theme(legend.position = "none",
