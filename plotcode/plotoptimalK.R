@@ -80,7 +80,7 @@ p2 = ggplot(dat7, aes(x = sig, y = BIC, group = Model, color = Model))+
   geom_label(aes(x = sig, y = exp(11.84), label = mono), fill = "#AC0136", col = "white", fontface = "bold",cex = 3)+
   ggtitle("BRCA")+
   xlab("Number of signatures")+
-  ylab("Bayesian Information Criteria (BIC)")+
+  ylab("Bayesian Information Criterion (BIC)")+
   geom_point(aes(x = minsig, y = min), cex = 2)+
   scale_color_manual(name = "Model for signatures",values = c("#AC0136", "#FF9912", "#27408B", "gray30"))+
   #theme(legend.title = element_text("Model for signatures"))+
@@ -90,8 +90,8 @@ p2 = ggplot(dat7, aes(x = sig, y = BIC, group = Model, color = Model))+
   scale_x_discrete(limits = c(5:15))
 
 p2 + annotate("text",x = 10, y = exp(11.93), label = "Optimal mixture", col = "gray30")+ 
-  annotate("text",x = 4.15, y = exp(11.7), label = "Tri", col = "gray30", cex = 3, fontface = "bold")+
-  annotate("text",x = 4.1, y = exp(11.77), label = "Di", col = "gray30", cex = 3, fontface = "bold")+
+  annotate("text",x = 4.3, y = exp(11.7), label = "Tri ", col = "gray30", cex = 3, fontface = "bold")+
+  annotate("text",x = 4.3, y = exp(11.77), label = "Di  ", col = "gray30", cex = 3, fontface = "bold")+
   annotate("text",x = 4.3, y = exp(11.84), label = "Mono", col = "gray30", cex = 3, fontface = "bold")
 
 
@@ -101,7 +101,6 @@ p2 + annotate("text",x = 10, y = exp(11.93), label = "Optimal mixture", col = "g
 rm(list=ls())
 library(Rcpp)
 library(RcppArmadillo)
-library(bench)
 library(gtools)
 
 source("UCUT/loadUCUTmodels.R")
@@ -134,9 +133,9 @@ for(i in sig){
     bicdi[i] = allmodels[[i]][4+i,which(allmodels[[i]][c(2:(1+i)),] == 66)]
   }
 }
-bicfull = as.vector(dat3[which(dat3[,2] == "full")[1:7],3])$BIC
+#bicfull = as.vector(dat3[which(dat3[,2] == "full")[1:7],3])$BIC
 
-dat1 = data.frame(sig, flex = bicmin, mono = bicmono, di = bicdi, full = bicfull)
+dat1 = data.frame(sig, flex = bicmin, mono = bicmono, di = bicdi)
 dat2 = reshape(dat1, varying = list(names(dat1)[-1]), times = names(dat1)[-1], direction = "long",v.names = "BIC", timevar = "Model")
 
 dat2 %>%
@@ -158,10 +157,10 @@ for(i in 1:7){
 
 model2 = model
 #model2[model2 == 0] = NA
-dat6$mono = rep(model2[,1],4)
-dat6$dimono = rep(model2[,2],4)
-dat6$di = rep(model2[,3],4)
-dat6$ditri = rep(model2[,6],4)
+dat6$mono = rep(model2[,1],3)
+dat6$dimono = rep(model2[,2],3)
+dat6$di = rep(model2[,3],3)
+dat6$ditri = rep(model2[,6],3)
 
 dat7 = dat6[dat6$Model != "full",]
 dat7$Model = factor(dat7$Model, levels = c("mono","di","flex"),labels = c("Mono-nucleotide","Di-nucleotide","Mixture"))
@@ -178,7 +177,7 @@ p3 = ggplot(dat7, aes(x = sig, y = BIC, group = Model, color = Model))+
   geom_label(aes(x = sig, y = exp(10.19), label = ditri), fill = "#E6AB02", col = "white", fontface = "bold",cex = 3)+
   ggtitle("UCUT")+
   xlab("Number of signatures")+
-  ylab("Bayesian Information Criteria (BIC)")+
+  ylab("Bayesian Information Criterion (BIC)")+
   geom_point(aes(x = minsig, y = min), cex = 2)+
   scale_color_manual(name = "Model for signatures",values = c("#1B9E77", "#7570B3", "gray30"))+
   #theme(legend.title = element_text("Model for signatures"))+
@@ -188,9 +187,12 @@ p3 = ggplot(dat7, aes(x = sig, y = BIC, group = Model, color = Model))+
   scale_x_discrete(limits = c(1:7))
 
 p3 + annotate("text",x = 4, y = exp(10.31), label = "Optimal mixture", col = "gray30")+ 
-  annotate("text",x = 0.1, y = exp(10.28), label = "Mono", col = "gray30", cex = 3, fontface = "bold")+
-  annotate("text",x = -0.03, y = exp(10.25), label = "Di", col = "gray30", cex = 3, fontface = "bold")+
-  annotate("text",x = 0.31, y = exp(10.22), label = "Di and mono", col = "gray30", cex = 3, fontface = "bold")+
-  annotate("text",x = 0.215, y = exp(10.19), label = "Tri and di", col = "gray30", cex = 3, fontface = "bold")
+  annotate("text",x = 0.5, y = exp(10.28), label = "Mono", col = "gray30", cex = 3, fontface = "bold")+
+  annotate("text",x = 0.5, y = exp(10.25), label = "Di", col = "gray30", cex = 3, fontface = "bold")+
+  annotate("text",x = 0.5, y = exp(10.22), label = "Di and mono", col = "gray30", cex = 3, fontface = "bold")+
+  annotate("text",x = 0.5, y = exp(10.19), label = "Tri and di", col = "gray30", cex = 3, fontface = "bold")
 
-
+# annotate("text",x = 0.1, y = exp(10.28), label = "Mono", col = "gray30", cex = 3, fontface = "bold")+
+#   annotate("text",x = -0.03, y = exp(10.25), label = "Di", col = "gray30", cex = 3, fontface = "bold")+
+#   annotate("text",x = 0.31, y = exp(10.22), label = "Di and mono", col = "gray30", cex = 3, fontface = "bold")+
+#   annotate("text",x = 0.215, y = exp(10.19), label = "Tri and di", col = "gray30", cex = 3, fontface = "bold")

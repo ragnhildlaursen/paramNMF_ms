@@ -79,7 +79,7 @@ p = ggplot(dat2, aes(x = idx, y = gkl))+
     name = "Generalized Kullback-Leibler (GKL)",
     
     # Add a second axis and specify its features
-    sec.axis = sec_axis(~(.-addC)/mC, name="Bayesian Information Criteria (BIC)")
+    sec.axis = sec_axis(~(.-addC)/mC, name="Bayesian Information Criterion (BIC)")
   ) +
   theme(
     axis.title.y = element_text(color = "black", size=13),
@@ -318,9 +318,9 @@ resMat3 = rbind(resMat2,c(120,120,240,resditri$gkl))
 
 resMat = resMat3
 
-resMat = resMat[-c(8,9,13,23,24,25,27,11,15,18,6,20,21),]
+resMat = resMat[-c(8,9,13,23,24,25,11,15,18,6,20,21),]
 
-resMat = resMatold[c(1,5,6,19,20,21),]
+#resMat = resMatold[c(1,5,6,19,20,21),]
 
 noSig = 2
 
@@ -336,8 +336,8 @@ diff = diff(range(gkl))/10
 
 dat1 = data.frame(idx = c(1:length(gkl)), gkl = gkl[prm_order2], sigty = resMat[prm_order2,c(1:noSig)])
 dat2 = reshape(dat1, varying = colnames(dat1)[-c(1,2)], direction = "long")
-#dat2$sigty = factor(dat2$sigty, levels = c(18,96,48,102,66,120))
-dat2$sigty = factor(dat2$sigty, levels = c(18,66,1536))
+dat2$sigty = factor(dat2$sigty, levels = c(18,96,48,102,66,120,1536))
+#dat2$sigty = factor(dat2$sigty, levels = c(18,66,1536))
 
 #dat2$bic = 2*dat2$gkl + log(nrow(V)*ncol(V))*(resMat[prm_order2,"nprmtot"]) 
 dat2$bic = 2*dat2$gkl + log(sum(V > 0.5))*(resMat[prm_order2,"nprmtot"])
@@ -350,9 +350,9 @@ dat2$bic = dat2$bic + addC
 dat2$sigty2 = dat2$sigty
 dat2$sigty2[13] = 18
 dat2$sigty2[14] = 66
- 
-dat2$sigty2[28] = 120
+#  
 dat2$sigty2[29] = 120
+dat2$sigty2[30] = 120
 
 datparam = data.frame(idx = c(1:nrow(resMat)), param = resMat[prm_order2,"nprmtot"], y = max(gkl)+diff/1.2)
 
@@ -372,7 +372,7 @@ p = ggplot(dat2, aes(x = idx, y = gkl))+
   #              arrow = arrow(length = unit(0.28, "cm")))+
   # geom_text(data = data.frame(x = 18, y = 10000), mapping = aes(x = x, y = y, label = "Total parameters"), fontface = "italic", col = "black")+
   theme_bw()+
-  theme(legend.position = c(0.23,0.28), 
+  theme(legend.position = c(0.11,0.47), 
         #legend.position = "bottom",
         legend.text.align = 0.5,
         legend.title = element_text(face = "bold"),
@@ -381,23 +381,23 @@ p = ggplot(dat2, aes(x = idx, y = gkl))+
         #legend.title.align = 0.5
         
   )+
-  scale_color_manual(values = c(brewer.pal(n = 7, name = "Dark2")[c(1,4,2,5,3,7,6)])[c(1,5,7)],
+  scale_color_manual(values = c(brewer.pal(n = 8, name = "Dark2")[c(1,4,2,8,3,7,6)]),
                      labels = c(expression(L[2] + L[1] + M + R[1] + R[2]), 
-                                #expression(L[1]%*%M%*%R[1]),
-                                #expression(L[2] + L[1]%*%M + M%*%R[1] + R[2]),
-                                #expression(L[2] + L[1]%*%M%*%R[1] + R[2]),
+                                expression(L[1]%*%M%*%R[1]),
+                                expression(L[2] + L[1]%*%M + M%*%R[1] + R[2]),
+                                expression(L[2] + L[1]%*%M%*%R[1] + R[2]),
                                 expression(L[2]%*%L[1] + L[1]%*%M + M%*%R[1] + R[1]%*%R[2]),
-                                #expression(L[2]%*%L[1] + L[1]%*%M%*%R[1] + R[1]%*%R[2]),
+                                expression(L[2]%*%L[1] + L[1]%*%M%*%R[1] + R[1]%*%R[2]),
                                 expression(L[2]%*%L[1]%*%M%*%R[1]%*%R[2])),
                      name = "Signature factorization")+
-  #geom_vline(xintercept = c(1.5,3.5,5.5,7.5,12.5), linetype = "dashed", color = "darkgray")+
+  geom_vline(xintercept = c(1.5,3.5,5.5,7.5,12.5), linetype = "dashed", color = "darkgray")+
   scale_y_continuous(
     
     # Features of the first axis
     name = "Generalized Kullback-Leibler (GKL)",
     
     # Add a second axis and specify its features
-    sec.axis = sec_axis(~(.-addC)/mC, name="Bayesian Information Criteria (BIC)")
+    sec.axis = sec_axis(~(.-addC)/mC, name="Bayesian Information Criterion (BIC)")
   ) +
   theme(
     axis.title.y = element_text(color = "black", size=13),

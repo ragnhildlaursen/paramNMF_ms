@@ -47,11 +47,14 @@ for(nsim in 1:nSim){
   ResultFixMono <- NMFglmSQR(Data = sampleV, NoSignatures = noSig, Signatures = MonoRes$signatures,tol=tol)
   
   ## Compare exposures: Cosine similarity for each patient
-  ResCosineMatPenta[,nsim] = cosMatch(t(PentaRes$exposures),t(ResultFixPenta$Exposures))$cossim
-  ResCosineMatDi[,nsim] = cosMatch(t(DiRes$exposures[,mDi]),t(ResultFixDi$Exposures))$cossim
-  ResCosineMatMono[,nsim] = cosMatch(t(MonoRes$exposures[,mMono]),t(ResultFixMono$Exposures))$cossim
+  ResCosineMatPenta[,nsim] = sapply(1:nG, function(x) similarity(PentaRes$exposures[x,],ResultFixPenta$Exposures[x,]))
+                                    
+                                    
+  # ResCosineMatPenta[,nsim] = cosMatch(t(PentaRes$exposures),t(ResultFixPenta$Exposures))$cossim
+  # ResCosineMatDi[,nsim] = cosMatch(t(DiRes$exposures[,mDi]),t(ResultFixDi$Exposures))$cossim
+  # ResCosineMatMono[,nsim] = cosMatch(t(MonoRes$exposures[,mMono]),t(ResultFixMono$Exposures))$cossim
 }
-save(ResCosineMatPenta,ResCosineMatDi,ResCosineMatMono, file = paste0("ExposureUCUTdwn",dwn[d]*100,".RData"))
+#save(ResCosineMatPenta,ResCosineMatDi,ResCosineMatMono, file = paste0("ExposureUCUTdwn",dwn[d]*100,".RData"))
 }
 
 

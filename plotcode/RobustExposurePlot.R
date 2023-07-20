@@ -6,6 +6,8 @@ setwd("~/projects/paramNMF_ms")
 library(RColorBrewer)
 library(ggplot2)
 library(ggpubr)
+library(reshape2)
+library(dplyr)
 ##################
 ## cosine similarity 
 order = c(1:8)
@@ -65,8 +67,7 @@ ggplot(datall, aes(x=type, y=s, fill=type, col = type)) +
 
 
 # Average cosine similarity for each run
-library(reshape2)
-library(dplyr)
+
 
 datmean = datall %>% group_by(type,id,downsample) %>% summarise(smean = mean(s))
 
@@ -89,15 +90,16 @@ ggplot(datmean, aes(x=type, y=smean, fill=type, col = type)) +
 ## UCUT exposures --------------------------------------------
 datalist = list()
 for(dwn in c(1,2,5)){
-  load(paste0("UCUT/ExposureUCUTdwn",dwn,".RData"))
+  load(paste0("UCUT/result/ExposureUCUTdwn",dwn,"patient.RData"))
   
+  datMix = data.frame(s = t(ResCosineMatMix), type = "Mix")
   datPenta = data.frame(s = t(ResCosineMatPenta), type = "Penta")
   datDi = data.frame(s = t(ResCosineMatDi), type = "Di")
   datMono = data.frame(s = t(ResCosineMatMono), type = "Mono")
   
-  dat1 = rbind(datPenta,datDi,datMono)
+  dat1 = rbind(datPenta,datMix,datDi,datMono)
   dat2 = reshape(dat1, varying = colnames(dat1)[1:nrow(ResCosineMatMono)], direction = "long")
-  dat2$type = factor(dat2$type, levels = c("Mono","Di","Penta"))
+  dat2$type = factor(dat2$type, levels = c("Mono","Di","Mix","Penta"))
   dat2$time = factor(dat2$time)
   dat2$downsample = dwn
   datalist[[dwn]] = dat2
@@ -114,14 +116,24 @@ colors3 = c("#AC0136","#FF9912", "#436EEE", "#27408B")
 ggplot(datall, aes(x=type, y=s, fill=type)) +
   #geom_violin(position=position_dodge(1), scale = "width") +
   geom_boxplot()+
-  facet_grid(rows = vars(time), cols = vars(downsample), scales = "free") +
+  facet_grid(cols = vars(downsample), scales = "free") +
   #geom_dotplot(binaxis='y', stackdir='center', dotsize=0.3) +
   ylab("Signatures")+
-  scale_fill_manual(values = colors3, labels = c("Mono","Di",'Mix',"Tri"), 
+  scale_fill_manual(values = colors3, labels = c("Mono","Di",'Mix',"Penta"), 
                     name = "Interaction model")
 
 
 
+datmean = datall %>% group_by(type,id,downsample) %>% summarise(smean = mean(s))
+
+ggplot(datmean, aes(x=type, y=smean, fill=type)) +
+  #geom_violin(position=position_dodge(1), scale = "width") +
+  geom_boxplot()+
+  facet_grid(cols = vars(downsample), scales = "free") +
+  #geom_dotplot(binaxis='y', stackdir='center', dotsize=0.3) +
+  ylab("Signatures")+
+  scale_fill_manual(values = colors3, labels = c("Mono","Di",'Mix',"Penta"), 
+                    name = "Interaction model")
 
 ggplot(datall, aes(x=type, y=s, fill=type, col = type)) +
   #geom_violin(position=position_dodge(1), scale = "width") +
