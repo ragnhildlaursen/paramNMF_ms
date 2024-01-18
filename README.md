@@ -46,9 +46,9 @@ load("BRCA/BRCA214.RData")
 ## Factor variables
 ##--------------------------------------------------------
 ## The factors for 96 different mutation types 
-L = factor(substr(colnames(V), start = 1, stop = 1))
-M = factor(substr(colnames(V), start = 3, stop = 5))
-R = factor(substr(colnames(V), start = 7, stop = 7))
+L = factor(substr(colnames(V), start = 1, stop = 1)) # left flanking nucleotide
+M = factor(substr(colnames(V), start = 3, stop = 5)) # base mutation
+R = factor(substr(colnames(V), start = 7, stop = 7)) # right flanking nucleotide
 
 ##--------------------------------------------------------
 ## Parametrizations of a signature
