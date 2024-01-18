@@ -25,20 +25,21 @@ The folder **UCUT** contains all the necessary data and code to recreate the res
 ## Code for plotting the figures 
 The code for plotting the figures in the paper are found in *plotcode* and the resulting plots can be found in the folder *plots*.
 
-## Example for using the function and model
-
+## Guide to apply paramtric NMF to your data
+### Load the required files and packages 
+The only file you will need to download from this repository to apply parametric NMF is *NMF.cpp*. 
+Then you will be able to source the file into **R** after loading the required packages in the following way:
 ```r
-# set working directory
-setwd("~/paramNMF_ms/")
-
 # libraries used
 library(Rcpp)
 library(RcppArmadillo)
 
-# loading the functions
-source("ModelSelection.R")
+# loading the function
 sourceCpp("NMF2.cpp")
-
+```
+### Load data and create your design matrix
+Now you will need to define your designmatrix. To do this you will need information about the mutationtypes in your data. In the dataset here, the mutationtypes include information about the base mutation and the left and right flanking nucleotides. Potentially it could also contain information about the replication timing or expression level, which could be included as an extra factor.
+```r
 # load count data, where the rows are different patients and the columns correspond to the different mutation types
 load("BRCA/BRCA214.RData")
 
@@ -51,30 +52,29 @@ M = factor(substr(colnames(V), start = 3, stop = 5)) # a vector of the base muta
 R = factor(substr(colnames(V), start = 7, stop = 7)) # a vector of the right flanking nucleotide
 
 ##--------------------------------------------------------
-## Parametrizations of a signature
+## Potential parametrizations of a signature
 ##--------------------------------------------------------
 ## Model matrices
 Mfull = model.matrix(~L*M*R)      # full model
 Mdi = model.matrix(~L*M + M*R)    # di-nucleotide model
 Mmono = model.matrix(~L + M + R)  # mono-nucleotide model
+```
+### Running paramtric NMF
+Now you can run paramtric NMF using your specified designmatrix for each signature. Either you can choose the same parametrization(i.e. designmatrix) for all your signatures or you can specify a different one for each signature. 
 
-##--------------------------------------------------------
-## Run a mixture model, where the first signatures follows mono-nucleotide parametrization, second a di-nucleotide parametrization and the third with the full/regular parametrization.
-##--------------------------------------------------------
+**All the signatures follow a di-nucleotide parametrization**
+```r
+res1 <- nmfprm(data=V,noSignatures=8,designMatrices=rep(list(Mdi),8))
+```
 
-res1 <- nmfprm(data=V,noSignatures=3,designMatrices=list(Mmono,Mdi,Mdi,Mfull))
+**Mixture model, where the first signatures follows mono-nucleotide parametrization, second a di-nucleotide parametrization and the third with the full/regular parametrization**
+```r
+res1 <- nmfprm(data=V, noSignatures=3, designMatrices=list(Mmono,Mdi,Mfull))
 
 # The exposures for the different signatures
 W = res1$exposures
 
 # The signatures that will follow their respective parametrizations defined in the function eg. the first signature will follow the mono-nucleotide parametrization.
 H = res1$signatures
-
-##--------------------------------------------------------
-## Run a mode, where all the signatures follow a di-nucleotide parametrization
-##--------------------------------------------------------
-
-res2 <- nmfprm(data=V,noSignatures=8,designMatrices=rep(list(Mdi),8))
-
 ```
 
