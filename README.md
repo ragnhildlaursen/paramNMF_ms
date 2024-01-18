@@ -27,7 +27,7 @@ The code for plotting the figures in the paper are found in *plotcode* and the r
 
 ## Example for using the model
 
-```r
+```{r setup}
 # set working directory
 setwd("~/paramNMF_ms/")
 
