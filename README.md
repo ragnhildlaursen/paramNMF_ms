@@ -25,7 +25,7 @@ The folder **UCUT** contains all the necessary data and code to recreate the res
 ## Code for plotting the figures 
 The code for plotting the figures in the paper are found in *plotcode* and the resulting plots can be found in the folder *plots*.
 
-## Example for using the model
+## Example for using the function and model
 
 ```r
 # set working directory
@@ -39,16 +39,16 @@ library(RcppArmadillo)
 source("ModelSelection.R")
 sourceCpp("NMF2.cpp")
 
-# load BRCA data 
+# load count data, where the rows are different patients and the columns correspond to the different mutation types
 load("BRCA/BRCA214.RData")
 
 ##--------------------------------------------------------
 ## Factor variables
 ##--------------------------------------------------------
-## The factors for 96 different mutation types 
-L = factor(substr(colnames(V), start = 1, stop = 1)) # left flanking nucleotide
-M = factor(substr(colnames(V), start = 3, stop = 5)) # base mutation
-R = factor(substr(colnames(V), start = 7, stop = 7)) # right flanking nucleotide
+## The factors for the different mutation types 
+L = factor(substr(colnames(V), start = 1, stop = 1)) # a vector of the left flanking nucleotide
+M = factor(substr(colnames(V), start = 3, stop = 5)) # a vector of the base mutation
+R = factor(substr(colnames(V), start = 7, stop = 7)) # a vector of the right flanking nucleotide
 
 ##--------------------------------------------------------
 ## Parametrizations of a signature
@@ -56,16 +56,22 @@ R = factor(substr(colnames(V), start = 7, stop = 7)) # right flanking nucleotide
 ## Model matrices
 Mfull = model.matrix(~L*M*R)      # full model
 Mdi = model.matrix(~L*M + M*R)    # di-nucleotide model
-Mmono = model.matrix(~L + M + R)  # multiplicative model
+Mmono = model.matrix(~L + M + R)  # mono-nucleotide model
 
 ##--------------------------------------------------------
-## Run a mixture model
+## Run a mixture model, where the first signatures follows mono-nucleotide parametrization, second a di-nucleotide parametrization and the third with the full/regular parametrization.
 ##--------------------------------------------------------
 
-res1 <- nmfprm(data=V,noSignatures=4,designMatrices=list(Mmono,Mdi,Mdi,Mfull))
+res1 <- nmfprm(data=V,noSignatures=3,designMatrices=list(Mmono,Mdi,Mdi,Mfull))
+
+# The exposures for the different signatures
+W = res1$exposures
+
+# The signatures that will follow their respective parametrizations defined in the function eg. the first signature will follow the mono-nucleotide parametrization.
+H = res1$signatures
 
 ##--------------------------------------------------------
-## Run a di-nucleotide model
+## Run a mode, where all the signatures follow a di-nucleotide parametrization
 ##--------------------------------------------------------
 
 res2 <- nmfprm(data=V,noSignatures=8,designMatrices=rep(list(Mdi),8))
